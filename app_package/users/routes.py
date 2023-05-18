@@ -41,14 +41,25 @@ salt = bcrypt.gensalt()
 
 users = Blueprint('users', __name__)
 
+@users.route('/are_we_working', methods=['GET'])
+def are_we_working():
+    logger_users.info(f"are_we_working endpoint pinged")
+
+    logger_users.info(f"{current_app.config.get('WS_API_PASSWORD')}")
+
+    # print(dir(current_app.config))
+    # print(current_app.config.items())
+
+    return jsonify("Yes! We're up! in the speedyprod10 machine")
+
 
 @users.route('/login', methods = ['GET'])
 def login():
-    logger_users.info(f"-- in user route --")
+    logger_users.info(f"-- in user/login route --")
 
     data_headers = request.headers
-    print(f"--- current app SQL_URI: {current_app.config.get('SQL_URI')}")
-    print("data_headers: ", data_headers)
+    logger_users.info(f"--- current app SQL_URI: {current_app.config.get('SQL_URI')}")
+    logger_users.info("data_headers: ", data_headers)
     # request_json = request.json
     # print("request_json: ", request_json)
     #Request Auth
