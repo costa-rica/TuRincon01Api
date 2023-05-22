@@ -80,11 +80,18 @@ def create_rincon_posts_list(current_user, rincon_id):
     for i in rincon.posts:
         temp_dict = {}
 
-        temp_dict['post_id'] = i.id
+        temp_dict['post_id'] = str(i.id)
         temp_dict['date_for_sorting'] = i.time_stamp_utc
+        temp_dict['date_for_sorting_ios'] = i.time_stamp_utc.strftime("%Y-%m-%d %H:%M:%S.%f")
         temp_dict['username'] = sess.get(Users,i.user_id).username
+        temp_dict['rincon_id'] = rincon_id
 
-        temp_dict['post_text'] = extract_urls_info(i.post_text)
+        if i.post_text == None:
+            temp_dict['post_text'] = ""
+        else:
+            temp_dict['post_text'] = extract_urls_info(i.post_text)
+        
+        temp_dict['post_text_ios'] = i.post_text
 
         temp_dict['image_exists'] = False if i.image_file_name == None else True
         
@@ -95,6 +102,8 @@ def create_rincon_posts_list(current_user, rincon_id):
                 temp_dict['image_filename'] = [i.image_file_name]
             else:
                 temp_dict['image_filename'] = i.image_file_name.split(",")
+        
+        temp_dict["image_filenames_ios"] = i.image_file_name
         
             # print("---- Splitting photo names ----")
             # print(temp_dict['image_filename'])

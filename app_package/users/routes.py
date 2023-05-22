@@ -59,15 +59,15 @@ def login():
 
     data_headers = request.headers
     logger_users.info(f"--- current app SQL_URI: {current_app.config.get('SQL_URI')}")
-    logger_users.info("data_headers: ", data_headers)
+    logger_users.info(f"data_headers: {data_headers}")
     # request_json = request.json
     # print("request_json: ", request_json)
     #Request Auth
     try:
         auth = request.authorization
-        print("auth: ", auth)
+        # print("auth: ", auth)
     except:
-        print("auth not readable")
+        # print("auth not readable")
         return jsonify({"status": "Auth not read-able."})
 
     if not auth or not auth.username or not auth.password:
@@ -76,7 +76,7 @@ def login():
     user = sess.query(Users).filter_by(email = auth.username).first()
     
     if not user:
-        print("No")
+        # print("No")
         return make_response('Could note verify - user not found', 401, {'message' : f'{auth.username} is not a user'})
 
     print("auth.passwprd: ", auth.password)
@@ -99,7 +99,7 @@ def register():
 
     try:
         request_json = request.json
-        print("request_json:",request_json)
+        # print("request_json:",request_json)
     except Exception as e:
         logger_users.info(e)
         return jsonify({"status": "httpBody data recieved not json not parse-able."})
@@ -123,8 +123,8 @@ def register():
 
 
     #log user in
-    print('--- new_user ---')
-    print(new_user)
+    # print('--- new_user ---')
+    # print(new_user)
     token = create_token(new_user)
 
     return jsonify({'token': token,'user_id':str(new_user.id)})

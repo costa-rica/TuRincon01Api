@@ -61,6 +61,8 @@ def rincon(current_user, rincon_id):
     #     posts_list.append(post_dict)
 
     posts_list = create_rincon_posts_list(current_user, rincon_id)
+    logger_main.info(f"post_list count: {len(posts_list)}")
+    # logger_main.info(f"post_list count: {len(posts_list)}")
 
     logger_main.info(f"- sending rincon's post: {len(posts_list)} posts")
     logger_main.info(f"- first post is: {posts_list[0]}")
@@ -70,7 +72,7 @@ def rincon(current_user, rincon_id):
 @main.route("/rincon_post_file/<file_name>", methods=["POST"])
 @token_required
 def rincon_file(current_user, file_name):
-
+    print("*** calling for images ***")
 
     try:
         request_json = request.json
