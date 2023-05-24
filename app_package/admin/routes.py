@@ -40,6 +40,9 @@ logger_admin.addHandler(stream_handler)
 
 admin = Blueprint('admin', __name__)
 
+
+
+
 @admin.route("/create_tr_backup01", methods=["POST"])
 def create_tr_backup01():
     logger_admin.info(f"- in create_tr_backup01")
@@ -89,12 +92,16 @@ def create_tr_backup01():
 
         db_tables_dict[table_name] = df
         if request_json.get("format") == "csv":
-            logger_admin.info(f"- backup data files as CSV")
             db_tables_dict[table_name].to_csv(os.path.join(backup_dir_path, f"{table_name}.csv"), index=False)
         else:
-            logger_admin.info(f"- backup data files as Pickle (python only readable)")
             db_tables_dict[table_name].to_pickle(os.path.join(backup_dir_path, f"{table_name}.pkl"))
     
+
+    if request_json.get("format") == "csv":
+        logger_admin.info(f"- backup data files as CSV")
+    else:
+        logger_admin.info(f"- backup data files as Pickle (python only readable)")
+
     if request_json.get("extras") == "no files":
         logger_admin.info(f"- backup with NO rincon_files compressed")
     else:
@@ -110,10 +117,46 @@ def create_tr_backup01():
     #delete 
     shutil.rmtree(backup_dir_path)
 
-    return jsonify({"status": "zip file create!"})
+    return jsonify({"status": "zip file created!"})
 
 
+@admin.route("/move_tr_backup01", methods=["POST"])
+def move_tr_backup01():
+    logger_admin.info(f"- in move_tr_backup01")
 
+    try:
+        request_json = request.json
+        logger_admin.info("request_json:",request_json)
+    except Exception as e:
+        logger_admin.info(e)
+        return make_response('Could not verify', 400, {'message' : 'httpBody data recieved not json not parse-able.'})
+
+    website_credentials = request_json.get("TR_VERIFICATION_PASSWORD")
+
+
+    if website_credentials != current_app.config.get("TR_VERIFICATION_PASSWORD"):
+        logger_admin.info("missing/incorrect website_credentials")
+        return make_response('Could not verify', 400, {'message' : 'missing/incorrect website_credentials'})
+    else:
+        logger_admin.info(f"- in move_tr_backup01: client verified, starting backup")
+        # metadata = Base.metadata
+        # db_table_list = [table for table in metadata.tables.keys()]
+
+    # search for db_backup.zip
+    if os.path.exists(os.path.join(current_app.config.get('DB_ROOT'),'db_backup.zip')):
+        #create tr_backup_[date]
+        new_backup_zip_name = "TrBackup" + datetime.now().strftime("%Y%m%d") + ".zip"
+
+        new_backup_path = os.path.join(current_app.config.get('BACKUP_ROOT'), new_backup_zip_name)
+        shutil.move(os.path.join(current_app.config.get('DB_ROOT'),'db_backup.zip'), new_backup_path)
+        return jsonify({"status": f"Saved backup as: {new_backup_path}"})
+    else:
+        return make_response('Could not verify', 500, {'message' : 'NO backup zip file found'})
+
+
+#############################
+# Delete not used: 20230524 #
+##############################
 @admin.route("/process_tr_backup01", methods=["POST"])
 def process_tr_backup01():
     logger_admin.info(f"- in process_tr_backup01")
