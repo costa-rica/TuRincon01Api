@@ -105,10 +105,10 @@ def check_invite_json():
         logger_main.info(e)
         return make_response('Could not verify', 400, {'message' : 'httpBody data recieved not json not parse-able.'})
 
-    website_credentials = request_json.get("tu-rincon.com_pw")
+    website_credentials = request_json.get("TR_VERIFICATION_PASSWORD")
 
 
-    if website_credentials != "sudo_let_me_in":
+    if website_credentials != current_app.config.get("TR_VERIFICATION_PASSWORD"):
         logger_main.info("missing/incorrect website_credentials")
         return make_response('Could not verify', 400, {'message' : 'missing/incorrect website_credentials'})
     else:
