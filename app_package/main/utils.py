@@ -109,13 +109,13 @@ def create_rincon_posts_list(current_user, rincon_id):
             # print(temp_dict['image_filename'])
             # print("-------------")
 
-        temp_dict['video_exists'] = False if i.video_file_name == None else True
+        temp_dict['video_exists'] = False if i.video_file_name in ["", None] else True
         
         temp_dict['video_path'] = f"{rincon_id}_{rincon.name_no_spaces}"
 
         if i.video_file_name:
             # if not i.image_file_name.find(","):
-            temp_dict['video_filename'] = i.video_file_name
+            temp_dict['video_file_name'] = i.video_file_name
             # else:
             #     temp_dict['image_filename'] = i.image_file_name.split(",")
         

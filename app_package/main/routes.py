@@ -61,11 +61,11 @@ def rincon(current_user, rincon_id):
     #     posts_list.append(post_dict)
 
     posts_list = create_rincon_posts_list(current_user, rincon_id)
-    logger_main.info(f"post_list count: {len(posts_list)}")
     # logger_main.info(f"post_list count: {len(posts_list)}")
+    # # logger_main.info(f"post_list count: {len(posts_list)}")
 
-    logger_main.info(f"- sending rincon's post: {len(posts_list)} posts")
-    logger_main.info(f"- first post is: {posts_list[0]}")
+    # logger_main.info(f"- sending rincon's post: {len(posts_list)} posts")
+    # logger_main.info(f"- first post is: {posts_list[0]}")
 
     return jsonify(posts_list)
 
@@ -89,6 +89,8 @@ def rincon_file(current_user, file_name):
         image_filename = file_list[0]
     else:
         image_filename = file_name
+
+    logger_main.info(f"- /rincon_post_file respose with filename sent: {image_filename}") 
 
     return send_from_directory(os.path.join(current_app.config.get('DB_ROOT'),"rincon_files", \
         rincon_files_db_folder_name), image_filename)
@@ -153,4 +155,33 @@ def check_invite_json():
 
         
         return jsonify({"status": "Success!"})
+
+
+
+
+@main.route("/rincon_post_file_testing/<file_name>", methods=["POST"])
+# @token_required
+def rincon_file_testing( file_name):
+    print("*** calling for images (rincon_file_testing) ***")
+
+    try:
+        request_json = request.json
+        print("request_json:",request_json)
+        rincon = sess.query(Rincons).filter_by(id = request_json["rincon_id"]).first()
+        rincon_files_db_folder_name = f"{rincon.id}_{rincon.name_no_spaces}"
+    except Exception as e:
+        logger_main.info(e)
+        return jsonify({"status": "httpBody data recieved not json not parse-able."})
+
+
+    if len(file_name.split(",")) > 0:
+        file_list = file_name.split(",")
+        image_filename = file_list[0]
+    else:
+        image_filename = file_name
+
+    logger_main.info(f"- /rincon_post_file respose with filename sent: {image_filename}") 
+
+    return send_from_directory(os.path.join(current_app.config.get('DB_ROOT'),"rincon_files", \
+        rincon_files_db_folder_name), image_filename)
 
