@@ -9,6 +9,7 @@ from tr01_models import sess, Users, Rincons, RinconsPosts, UsersToRincons, \
 from app_package.token_decorator import token_required
 from app_package.main.utils import create_rincon_posts_list
 import json
+import time
 
 main = Blueprint('main', __name__)
 
@@ -46,21 +47,17 @@ def rincon(current_user, rincon_id):
     
     rincon = sess.query(Rincons).filter_by(id= rincon_id).first()
 
-    # posts_list = []
-    # for post in rincon.posts:
-    #     post_dict = {}
-    #     post_dict["id"] = str(post.id)
-    #     post_dict["user_id"] = str(post.user_id)
-    #     post_created_by_user = sess.query(Users).filter_by(id=post.user_id).first()
-    #     post_dict["username"] = str(post_created_by_user.username)
-    #     post_dict["rincon_id"] = str(post.rincon_id)
-    #     post_dict["post_text"] = str(post.post_text)
-    #     post_dict["post_date"] = str(post.time_stamp_utc)
-    #     post_dict["image_file_name"] = post.image_file_name
-    #     post_dict["video_file_name"] = post.video_file_name
-    #     posts_list.append(post_dict)
+    try:
+        request_json = request.json
+        ios_flag = True if request_json.get('ios_flag')=='true' else False
+        logger_main.info("request_json:",request_json)
+        logger_main.info(f"ios_flag: {type(ios_flag)}, {ios_flag}")
+    except Exception as e:
+        logger_main.info(e)
+        return make_response('Could not verify', 400, {'message' : 'httpBody data recieved not json not parse-able.'})
 
-    posts_list = create_rincon_posts_list(current_user, rincon_id)
+
+    posts_list = create_rincon_posts_list(current_user, rincon_id, ios_flag)
     # logger_main.info(f"post_list count: {len(posts_list)}")
     # # logger_main.info(f"post_list count: {len(posts_list)}")
 
@@ -89,6 +86,11 @@ def rincon_file(current_user, file_name):
         image_filename = file_list[0]
     else:
         image_filename = file_name
+
+
+    # if os.environ.get('CONFIG_TYPE')=='local':
+    #     print("*** sleeping for 10 seconds *")
+    #     time.sleep(10)
 
     logger_main.info(f"- /rincon_post_file respose with filename sent: {image_filename}") 
 
@@ -180,8 +182,52 @@ def rincon_file_testing( file_name):
     else:
         image_filename = file_name
 
+    # print(f"current_app.config.get('CONFIG_TYPE'): {current_app.config.get('CONFIG_TYPE')}")
+    # if current_app.config.get('CONFIG_TYPE')=='local':
+    #     print("*** sleeping for 5 seconds *")
+    #     time.sleep(5)
+
     logger_main.info(f"- /rincon_post_file respose with filename sent: {image_filename}") 
+
+
+
 
     return send_from_directory(os.path.join(current_app.config.get('DB_ROOT'),"rincon_files", \
         rincon_files_db_folder_name), image_filename)
+
+
+
+@main.route('/like_post/<rincon_id>/<post_id>/')
+@token_required
+def like_post(rincon_id,post_id):
+    logger_main.info(f"- Like {rincon_id} {post_id} -")
+
+    rincon_id = int(rincon_id)
+    post_id = int(post_id)
+    post_like = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
+    
+    if post_like:
+        print("- post already LIKED -")
+        sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).delete()
+        sess.commit()
+    else:
+        print("- post NOT liked")
+        new_post_like = RinconsPostsLikes(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id, post_like=True)
+        sess.add(new_post_like)
+        sess.commit()
+
+
+    # new_post_like = RinconsPostsLikes(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id, post_like=True)
+    # sess.add(new_post_like)
+    # sess.commit()
+
+    # post_like = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
+    print("Post Like:", post_like)
+
+
+
+    # return redirect(request.referrer, _anchor='like_'+post_id)
+    return redirect(url_for('main.rincon', rincon_id=rincon_id,post_id=post_id, _anchor='like_'+str(post_id)))
+
+
 

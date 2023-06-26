@@ -67,7 +67,7 @@ def extract_urls_info(feed_obj_text):
     return url_dict
 
 
-def create_rincon_posts_list(current_user, rincon_id):
+def create_rincon_posts_list(current_user, rincon_id, ios_flag):
 
     rincon = sess.get(Rincons,rincon_id)
 
@@ -130,6 +130,7 @@ def create_rincon_posts_list(current_user, rincon_id):
         
         if current_user.is_authenticated:
             temp_dict['liked'] = False if i.id not in user_likes_this_rincon else True
+            temp_dict['liked_ios'] = str(temp_dict['liked'])
         
         temp_dict['like_count'] = len(i.post_like)
 
@@ -137,24 +138,44 @@ def create_rincon_posts_list(current_user, rincon_id):
             temp_dict['delete_post_permission'] = False if i.user_id != current_user.id else True
         else:
             temp_dict['delete_post_permission'] = False
+        
+        temp_dict['delete_post_permission_ios'] = str(temp_dict['delete_post_permission'])
 
+        
         comments_list = []
+        
         for comment in i.comments:
             temp_sub_dict = {}
             temp_sub_dict['date'] = comment.time_stamp_utc.strftime("%m/%d/%y %H:%M")
             temp_sub_dict['username'] = sess.get(Users,comment.user_id).username
             temp_sub_dict['comment_text'] = comment.comment_text
-            if current_user.is_authenticated:
-                temp_sub_dict['delete_comment_permission'] = False if comment.user_id != current_user.id else True
-            else:
-                temp_sub_dict['delete_comment_permission'] = False
 
-            temp_sub_dict['comment_id'] = comment.id
+            if ios_flag:
+                if current_user.is_authenticated:
+                    temp_sub_dict['delete_comment_permission'] = "False" if comment.user_id != current_user.id else "True"
+                else:
+                    temp_sub_dict['delete_comment_permission'] = "False"
+                
+
+                temp_sub_dict['comment_id'] = str(comment.id)
+            else:
+                if current_user.is_authenticated:
+                    temp_sub_dict['delete_comment_permission'] = False if comment.user_id != current_user.id else True
+                else:
+                    temp_sub_dict['delete_comment_permission'] = False
+                
+
+                temp_sub_dict['comment_id'] = comment.id
+
+            print("temp_sub_dict after stringifying: ", temp_sub_dict)
             comments_list.append(temp_sub_dict)
+
         temp_dict['comments'] = comments_list
+
         rincon_posts.append(temp_dict)
 
     rincon_posts = sorted(rincon_posts, key=lambda d: d['date_for_sorting'], reverse=True)
+    # print(rincon_posts)
 
     return rincon_posts
 
