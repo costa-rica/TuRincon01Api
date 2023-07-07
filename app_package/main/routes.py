@@ -88,9 +88,9 @@ def rincon_file(current_user, file_name):
         image_filename = file_name
 
 
-    # if os.environ.get('CONFIG_TYPE')=='local':
-    #     print("*** sleeping for 10 seconds *")
-    #     time.sleep(10)
+    if os.environ.get('CONFIG_TYPE')=='local':
+        print("*** sleeping for 5 seconds *")
+        time.sleep(5)
 
     logger_main.info(f"- /rincon_post_file respose with filename sent: {image_filename}") 
 
