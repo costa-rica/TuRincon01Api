@@ -36,12 +36,8 @@ def are_we_running():
         hostname = socket.gethostname()
     except:
         hostname = "not sure of my name"
-    logger_users.info(f"are_we_working endpoint pinged")
+    logger_main.info(f"are_we_working endpoint pinged")
 
-    logger_users.info(f"{current_app.config.get('WS_API_PASSWORD')}")
-
-    # print(dir(current_app.config))
-    # print(current_app.config.items())
 
     return jsonify(f"Yes! We're up! in the {hostname} machine")
 
