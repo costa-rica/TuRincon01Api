@@ -88,7 +88,7 @@ def rincon_file(current_user, file_name):
         image_filename = file_name
 
 
-    if os.environ.get('CONFIG_TYPE')=='local':
+    if os.environ.get('FLASK_CONFIG_TYPE')=='local':
         print("*** sleeping for 5 seconds *")
         time.sleep(5)
 
@@ -182,8 +182,8 @@ def rincon_file_testing( file_name):
     else:
         image_filename = file_name
 
-    # print(f"current_app.config.get('CONFIG_TYPE'): {current_app.config.get('CONFIG_TYPE')}")
-    # if current_app.config.get('CONFIG_TYPE')=='local':
+    # print(f"current_app.config.get('FLASK_CONFIG_TYPE'): {current_app.config.get('FLASK_CONFIG_TYPE')}")
+    # if current_app.config.get('FLASK_CONFIG_TYPE')=='local':
     #     print("*** sleeping for 5 seconds *")
     #     time.sleep(5)
 
