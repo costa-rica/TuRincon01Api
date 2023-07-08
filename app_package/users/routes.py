@@ -41,17 +41,6 @@ salt = bcrypt.gensalt()
 
 users = Blueprint('users', __name__)
 
-@users.route('/are_we_working', methods=['GET'])
-def are_we_working():
-    logger_users.info(f"are_we_working endpoint pinged")
-
-    logger_users.info(f"{current_app.config.get('WS_API_PASSWORD')}")
-
-    # print(dir(current_app.config))
-    # print(current_app.config.items())
-
-    return jsonify("Yes! We're up! in the speedyprod10 machine")
-
 
 @users.route('/login', methods = ['GET'])
 def login():
@@ -139,37 +128,37 @@ def register():
 #     return jsonify({"status":f"User email: {new_email} successfully logged out"})
 
 
-@users.route('/test_response', methods=['POST'])
-def test_response():
-    logger_users.info(f"-- in test_response route --")
+# @users.route('/test_response', methods=['POST'])
+# def test_response():
+#     logger_users.info(f"-- in test_response route --")
 
-    try:
-        request_json = request.json
-        print("request_json:",request_json)
-    except Exception as e:
-        logger_users.info(e)
-        return jsonify({"status": "httpBody data recieved not json not parse-able."})
+#     try:
+#         request_json = request.json
+#         print("request_json:",request_json)
+#     except Exception as e:
+#         logger_users.info(e)
+#         return jsonify({"status": "httpBody data recieved not json not parse-able."})
 
-    if request_json.get("message") == "sudo_let_me_in":
-        return jsonify({'response': "success!"})
+#     if request_json.get("message") == "sudo_let_me_in":
+#         return jsonify({'response': "success!"})
 
-    return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})
+#     return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})
 
 
-@users.route('/test_response_token', methods=['POST'])
-@token_required
-def test_response_token(current_user):
-    logger_users.info(f"-- in test_response_token route --")
+# @users.route('/test_response_token', methods=['POST'])
+# @token_required
+# def test_response_token(current_user):
+#     logger_users.info(f"-- in test_response_token route --")
 
-    try:
-        request_json = request.json
-        print("request_json:",request_json)
-    except Exception as e:
-        logger_users.info(e)
-        return jsonify({"status": "httpBody data recieved not json not parse-able."})
+#     try:
+#         request_json = request.json
+#         print("request_json:",request_json)
+#     except Exception as e:
+#         logger_users.info(e)
+#         return jsonify({"status": "httpBody data recieved not json not parse-able."})
 
-    if request_json.get("message") == "sudo_let_me_in":
-        return jsonify({'response': "success!"})
+#     if request_json.get("message") == "sudo_let_me_in":
+#         return jsonify({'response': "success!"})
 
-    return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})
+#     return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})
 

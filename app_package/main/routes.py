@@ -10,6 +10,7 @@ from app_package.token_decorator import token_required
 from app_package.main.utils import create_rincon_posts_list
 import json
 import time
+import socket
 
 main = Blueprint('main', __name__)
 
@@ -28,6 +29,21 @@ stream_handler.setFormatter(formatter_terminal)
 logger_main.addHandler(file_handler)
 logger_main.addHandler(stream_handler)
 
+@main.route('/are_we_running', methods=['GET'])
+def are_we_running():
+    
+    try:
+        hostname = socket.gethostname()
+    except:
+        hostname = "not sure of my name"
+    logger_users.info(f"are_we_working endpoint pinged")
+
+    logger_users.info(f"{current_app.config.get('WS_API_PASSWORD')}")
+
+    # print(dir(current_app.config))
+    # print(current_app.config.items())
+
+    return jsonify(f"Yes! We're up! in the {hostname} machine")
 
 @main.route("/rincons", methods=["GET"])
 @token_required
