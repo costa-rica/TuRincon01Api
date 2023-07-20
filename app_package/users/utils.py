@@ -43,8 +43,8 @@ def create_token(user):
     s=Serializer(current_app.config['SECRET_KEY'], expires_sec)
     token = s.dumps({'user_id': user.id}).decode('utf-8')
     # token = s.dumps({'user_id': user.id})# This is not right just testing to get Swift  response
-    print("token sending back: ", token)
-    print(type(token))
+    # print("token sending back: ", token)
+    # print(type(token))
     return token
 
 

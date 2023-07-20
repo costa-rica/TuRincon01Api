@@ -68,11 +68,12 @@ def login():
         # print("No")
         return make_response('Could note verify - user not found', 401, {'message' : f'{auth.username} is not a user'})
 
-    print("auth.passwprd: ", auth.password)
+    # print("auth.passwprd: ", auth.password)
     if bcrypt.checkpw(auth.password.encode(), user.password):
 
         token = create_token(user)
         user_rincons = [[str(i.rincon.id), i.rincon.name] for i in user.rincons]
+        
 
         return jsonify({'token': token,'user_id':str(user.id), 'user_rincons': user_rincons})
 

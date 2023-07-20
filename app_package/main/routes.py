@@ -15,7 +15,7 @@ import socket
 main = Blueprint('main', __name__)
 
 formatter = logging.Formatter('%(asctime)s:%(name)s:%(message)s')
-formatter_terminal = logging.Formatter('%(asctime)s:%(filename)s:%(name)s:%(message)s')
+formatter_terminal = logging.Formatter('%(asctime)s:%(filename)s:%(lineno)d:%(name)s:%(message)s')
 
 logger_main = logging.getLogger(__name__)
 logger_main.setLevel(logging.DEBUG)
@@ -209,15 +209,20 @@ def rincon_file_testing( file_name):
 
 
 
-@main.route('/like_post/<rincon_id>/<post_id>/')
+@main.route('/like_post/<rincon_id>/<post_id>/', methods=['POST'])
+# @main.route('/like_post/<post_id>/', methods=['POST'])
 @token_required
-def like_post(rincon_id,post_id):
+def like_post(current_user, rincon_id, post_id):
     logger_main.info(f"- Like {rincon_id} {post_id} -")
+    # rincon = sess.get(Rincons,rincon_id)
 
     rincon_id = int(rincon_id)
     post_id = int(post_id)
-    post_like = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
+    print("post_id: ", post_id)
     
+    # print("post: ", post)
+    
+    post_like = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
     if post_like:
         print("- post already LIKED -")
         sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).delete()
@@ -228,7 +233,9 @@ def like_post(rincon_id,post_id):
         sess.add(new_post_like)
         sess.commit()
 
-
+    post = sess.get(RinconsPosts, post_id)
+    post_like_updated = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
+    
     # new_post_like = RinconsPostsLikes(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id, post_like=True)
     # sess.add(new_post_like)
     # sess.commit()
@@ -236,10 +243,33 @@ def like_post(rincon_id,post_id):
     # post_like = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
     print("Post Like:", post_like)
 
+    print("What we are putting in the dictionary:")
+    print(f"user_id: {current_user.id}")
+    print(f"rincon_id: {rincon_id}")
+    print(f"post_id: {post_id}")
+    # print(f"post_like_updated: {post_like_updated.post_like}")
+    # if post_like_updated != None:
+    print(f"post_like_updated (Bool): {True if post_like_updated != None else False}")
+    print(f"post: ", post)
+    print(f"like_count: {post.post_like}")
+    print(f"like_count (count): {len(post.post_like) if post.post_like != [] else 0}")
+    
 
+    response_dict = {}
+    response_dict["user_id"]=current_user.id
+    response_dict["rincon_id"]=rincon_id
+    response_dict["post_id"]=post_id
+    response_dict["liked"]=True if post_like_updated != None else False
+    # try:
+    response_dict["like_count"]= len(post.post_like) if post.post_like != [] else 0
+    # except AttributeError: # this means no like rows exist for this post
+    #     response_dict["like_count"]= 0
+    
 
     # return redirect(request.referrer, _anchor='like_'+post_id)
-    return redirect(url_for('main.rincon', rincon_id=rincon_id,post_id=post_id, _anchor='like_'+str(post_id)))
+    # return redirect(url_for('main.rincon', rincon_id=rincon_id,post_id=post_id, _anchor='like_'+str(post_id)))
+    # return jsonify({"rincon_id":f"user_id: {current_user.id}, liked post: {post_id}"})
+    return jsonify(response_dict)
 
 
 
