@@ -273,3 +273,36 @@ def like_post(current_user, rincon_id, post_id):
 
 
 
+@main.route('/new_comment/<rincon_id>/<post_id>/', methods=['POST'])
+# @main.route('/like_post/<post_id>/', methods=['POST'])
+@token_required
+def new_comment(current_user, rincon_id, post_id):
+    logger_main.info(f"- new_comment {rincon_id} {post_id} -")
+
+
+    rincon_id = int(rincon_id)
+    post_id = int(post_id)
+    print("post_id: ", post_id)
+
+
+    try:
+        request_json = request.json
+        # print("request_json:",request_json)
+    except Exception as e:
+        logger_users.info(e)
+        return jsonify({"status": "httpBody data recieved not json not parse-able."})
+
+    new_comment = request_json.get("new_comment")
+    print(f"posted comment: {new_comment}")
+
+    new_comment_for_post = RinconsPostsComments(post_id=post_id, rincon_id=rincon_id,user_id=current_user.id, comment_text=new_comment)
+    sess.add(new_comment_for_post)
+    sess.commit()
+    
+
+    ios_flag = True if request_json.get('ios_flag')=='true' else False
+    posts_list = create_rincon_posts_list(current_user, rincon_id, ios_flag)
+    print("----------")
+    print(posts_list)
+    print("-----------")
+    return jsonify(posts_list)
