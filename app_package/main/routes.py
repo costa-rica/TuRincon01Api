@@ -75,9 +75,9 @@ def rincon(current_user, rincon_id):
 
     # logger_main.info(f"- sending rincon's post: {len(posts_list)} posts")
     # logger_main.info(f"- first post is: {posts_list[0]}")
-    print("----------")
-    print(posts_list)
-    print("-----------")
+    # print("----------")
+    # print(posts_list)
+    # print("-----------")
     return jsonify(posts_list)
 
 @main.route("/rincon_post_file/<file_name>", methods=["POST"])
@@ -288,11 +288,15 @@ def delete_comment(current_user, rincon_id, post_id, comment_id):
     post = sess.get(RinconsPosts, post_id)
     post_like_updated = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
 
-    response_dict = {}
-    response_dict["user_id"]=current_user.id
-    response_dict["rincon_id"]=rincon_id
-    response_dict["post_id"]=post_id
-    response_dict["post_dict"]=create_rincon_post_dict(current_user,rincon_id, post_id)
+    # response_dict = {}
+    # response_dict["user_id"]=current_user.id
+    # response_dict["rincon_id"]=rincon_id
+    # response_dict["post_id"]=post_id
+    # response_dict["post_dict"]=create_rincon_post_dict(current_user,rincon_id, post_id)
+    post_dict = create_rincon_post_dict(current_user,rincon_id, post_id)
+    print("----------------")
+    print(post_dict)
+    print("------------------------")
 
-    return jsonify(response_dict)
+    return jsonify(post_dict)
 
