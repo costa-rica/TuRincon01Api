@@ -7,7 +7,7 @@ from logging.handlers import RotatingFileHandler
 from tr01_models import sess, Users, Rincons, RinconsPosts, UsersToRincons, \
     RinconsPostsComments, RinconsPostsLikes, RinconsPostsCommentsLikes
 from app_package.token_decorator import token_required
-from app_package.main.utils import create_rincon_posts_list
+from app_package.main.utils import create_rincon_posts_list, create_rincon_post_dict
 import json
 import time
 import socket
@@ -69,13 +69,15 @@ def rincon(current_user, rincon_id):
         return make_response('Could not verify', 400, {'message' : 'httpBody data recieved not json not parse-able.'})
 
 
-    posts_list = create_rincon_posts_list(current_user, rincon_id, ios_flag)
+    posts_list = create_rincon_posts_list(current_user, rincon_id)
     # logger_main.info(f"post_list count: {len(posts_list)}")
     # # logger_main.info(f"post_list count: {len(posts_list)}")
 
     # logger_main.info(f"- sending rincon's post: {len(posts_list)} posts")
     # logger_main.info(f"- first post is: {posts_list[0]}")
-
+    print("----------")
+    print(posts_list)
+    print("-----------")
     return jsonify(posts_list)
 
 @main.route("/rincon_post_file/<file_name>", methods=["POST"])
@@ -210,25 +212,18 @@ def rincon_file_testing( file_name):
 
 
 @main.route('/like_post/<rincon_id>/<post_id>/', methods=['POST'])
-# @main.route('/like_post/<post_id>/', methods=['POST'])
 @token_required
 def like_post(current_user, rincon_id, post_id):
     logger_main.info(f"- Like {rincon_id} {post_id} -")
-    # rincon = sess.get(Rincons,rincon_id)
 
     rincon_id = int(rincon_id)
     post_id = int(post_id)
-    print("post_id: ", post_id)
-    
-    # print("post: ", post)
     
     post_like = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
     if post_like:
-        print("- post already LIKED -")
         sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).delete()
         sess.commit()
     else:
-        print("- post NOT liked")
         new_post_like = RinconsPostsLikes(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id, post_like=True)
         sess.add(new_post_like)
         sess.commit()
@@ -236,73 +231,68 @@ def like_post(current_user, rincon_id, post_id):
     post = sess.get(RinconsPosts, post_id)
     post_like_updated = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
     
-    # new_post_like = RinconsPostsLikes(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id, post_like=True)
-    # sess.add(new_post_like)
-    # sess.commit()
-
-    # post_like = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
-    print("Post Like:", post_like)
-
-    print("What we are putting in the dictionary:")
-    print(f"user_id: {current_user.id}")
-    print(f"rincon_id: {rincon_id}")
-    print(f"post_id: {post_id}")
-    # print(f"post_like_updated: {post_like_updated.post_like}")
-    # if post_like_updated != None:
-    print(f"post_like_updated (Bool): {True if post_like_updated != None else False}")
-    print(f"post: ", post)
-    print(f"like_count: {post.post_like}")
-    print(f"like_count (count): {len(post.post_like) if post.post_like != [] else 0}")
-    
-
     response_dict = {}
     response_dict["user_id"]=current_user.id
     response_dict["rincon_id"]=rincon_id
     response_dict["post_id"]=post_id
     response_dict["liked"]=True if post_like_updated != None else False
-    # try:
-    response_dict["like_count"]= len(post.post_like) if post.post_like != [] else 0
-    # except AttributeError: # this means no like rows exist for this post
-    #     response_dict["like_count"]= 0
-    
+    response_dict["like_count"]= len(post.post_like) if post.post_like != [] else 0  
 
-    # return redirect(request.referrer, _anchor='like_'+post_id)
-    # return redirect(url_for('main.rincon', rincon_id=rincon_id,post_id=post_id, _anchor='like_'+str(post_id)))
-    # return jsonify({"rincon_id":f"user_id: {current_user.id}, liked post: {post_id}"})
     return jsonify(response_dict)
 
 
 
 @main.route('/new_comment/<rincon_id>/<post_id>/', methods=['POST'])
-# @main.route('/like_post/<post_id>/', methods=['POST'])
 @token_required
 def new_comment(current_user, rincon_id, post_id):
     logger_main.info(f"- new_comment {rincon_id} {post_id} -")
 
-
     rincon_id = int(rincon_id)
     post_id = int(post_id)
-    print("post_id: ", post_id)
-
 
     try:
         request_json = request.json
-        # print("request_json:",request_json)
     except Exception as e:
         logger_users.info(e)
         return jsonify({"status": "httpBody data recieved not json not parse-able."})
 
     new_comment = request_json.get("new_comment")
-    print(f"posted comment: {new_comment}")
 
     new_comment_for_post = RinconsPostsComments(post_id=post_id, rincon_id=rincon_id,user_id=current_user.id, comment_text=new_comment)
     sess.add(new_comment_for_post)
     sess.commit()
     
-
     ios_flag = True if request_json.get('ios_flag')=='true' else False
-    posts_list = create_rincon_posts_list(current_user, rincon_id, ios_flag)
-    print("----------")
-    print(posts_list)
-    print("-----------")
+    rincon_id = str(rincon_id)
+    posts_list = create_rincon_posts_list(current_user, rincon_id)
     return jsonify(posts_list)
+
+
+@main.route('/delete_comment/<rincon_id>/<post_id>/<comment_id>', methods=['POST'])
+@token_required
+def delete_comment(current_user, rincon_id, post_id, comment_id):
+    logger_main.info(f"- delete_comment rincon_id:{rincon_id} post_id:{post_id} comment_id: {comment_id}-")
+
+    rincon_id = int(rincon_id)
+    post_id = int(post_id)
+    comment_id = int(comment_id)
+
+    comment_to_delete = sess.query(RinconsPostsComments).filter_by(
+        rincon_id=rincon_id, post_id=post_id, user_id=current_user.id,id=comment_id).first()
+    if comment_to_delete:
+        print("- exists -")
+        sess.query(RinconsPostsComments).filter_by(
+            rincon_id=rincon_id, post_id=post_id, user_id=current_user.id,id=comment_id).delete()
+        sess.commit()
+
+    post = sess.get(RinconsPosts, post_id)
+    post_like_updated = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
+
+    response_dict = {}
+    response_dict["user_id"]=current_user.id
+    response_dict["rincon_id"]=rincon_id
+    response_dict["post_id"]=post_id
+    response_dict["post_dict"]=create_rincon_post_dict(current_user,rincon_id, post_id)
+
+    return jsonify(response_dict)
+
