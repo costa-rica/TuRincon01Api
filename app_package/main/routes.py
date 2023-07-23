@@ -70,11 +70,7 @@ def rincon(current_user, rincon_id):
 
 
     posts_list = create_rincon_posts_list(current_user, rincon_id)
-    # logger_main.info(f"post_list count: {len(posts_list)}")
-    # # logger_main.info(f"post_list count: {len(posts_list)}")
 
-    # logger_main.info(f"- sending rincon's post: {len(posts_list)} posts")
-    # logger_main.info(f"- first post is: {posts_list[0]}")
     # print("----------")
     # print(posts_list)
     # print("-----------")
@@ -171,8 +167,6 @@ def check_invite_json():
 
         
         return jsonify({"status": "Success!"})
-
-
 
 
 @main.route("/rincon_post_file_testing/<file_name>", methods=["POST"])
@@ -288,15 +282,21 @@ def delete_comment(current_user, rincon_id, post_id, comment_id):
     post = sess.get(RinconsPosts, post_id)
     post_like_updated = sess.query(RinconsPostsLikes).filter_by(rincon_id=rincon_id, post_id=post_id, user_id=current_user.id).first()
 
-    # response_dict = {}
-    # response_dict["user_id"]=current_user.id
-    # response_dict["rincon_id"]=rincon_id
-    # response_dict["post_id"]=post_id
-    # response_dict["post_dict"]=create_rincon_post_dict(current_user,rincon_id, post_id)
     post_dict = create_rincon_post_dict(current_user,rincon_id, post_id)
     print("----------------")
     print(post_dict)
     print("------------------------")
 
     return jsonify(post_dict)
+
+
+@main.route('/get_last_post_id', methods=['POST'])
+@token_required
+def get_last_post_id(current_user):
+    logger_main.info(f"- accessed get_last_post_id endpoint")
+
+    last_post = sess.query(RinconsPosts).order_by(RinconsPosts.id.desc()).first()
+
+    return jsonify({"last_post_id":str(last_post.id)})
+    # return str(last_post.id)
 
