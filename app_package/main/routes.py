@@ -300,3 +300,37 @@ def get_last_post_id(current_user):
     return jsonify({"last_post_id":str(last_post.id)})
     # return str(last_post.id)
 
+
+@main.route('/receive_image', methods=['POST'])
+@token_required
+def receive_image(current_user):
+    logger_main.info(f"- in receive_image endpoint")
+
+
+
+    try:
+        request_json = request.json
+        
+
+        rincon_id = int(request_json.get("rincon_id"))
+        print(f"-Rincon_id {rincon_id}")
+        post_id = int(request_json.get("post_id"))
+        print(f"-Rincon_id {post_id}")
+    except Exception as e:
+        logger_users.info(e)
+        return jsonify({"status": "httpBody data recieved not json not parse-able."})
+
+    try:
+        requestFiles = request.files
+        print(f"reqeustFiles: {requestFiles}")
+    except Exception as e:
+        logger_users.info(e)
+        return jsonify({"status": "httpBody (files) data recieved not json not parse-able."})
+    
+    print(requestFiles.getlist('add_file_photo'))
+    path_to_rincon_files = os.path.join(current_app.config.get('DB_ROOT'), "rincon_files",this_rincon_dir_name)
+    requestFiles.getlist('add_file_photo').save(os.path.join(path_to_rincon_files, new_image_name))
+
+    logger_main.info(f"- in receive_image endpoint")
+
+    return jsonify({"image_received_status":str(last_post.id)})

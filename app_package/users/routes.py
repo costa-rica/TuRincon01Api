@@ -48,27 +48,20 @@ def login():
 
     data_headers = request.headers
     logger_users.info(f"--- current app SQL_URI: {current_app.config.get('SQL_URI')}")
-    logger_users.info(f"data_headers: {data_headers}")
-    # request_json = request.json
-    # print("request_json: ", request_json)
-    #Request Auth
+
     try:
         auth = request.authorization
-        # print("auth: ", auth)
     except:
-        # print("auth not readable")
         return jsonify({"status": "Auth not read-able."})
 
     if not auth or not auth.username or not auth.password:
-        print("auth not sent")
+        logger_users.info("auth not sent")
         return make_response('Could not verify', 400, {'message' : 'missing auth body i.e. need auth= (username, password)'})
     user = sess.query(Users).filter_by(email = auth.username).first()
     
     if not user:
-        # print("No")
         return make_response('Could note verify - user not found', 401, {'message' : f'{auth.username} is not a user'})
 
-    # print("auth.passwprd: ", auth.password)
     if bcrypt.checkpw(auth.password.encode(), user.password):
 
         token = create_token(user)
