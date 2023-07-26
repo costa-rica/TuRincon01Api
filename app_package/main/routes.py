@@ -290,9 +290,9 @@ def delete_comment(current_user, rincon_id, post_id, comment_id):
     return jsonify(post_dict)
 
 
-@main.route('/get_last_post_id', methods=['POST'])
+@main.route('/send_last_post_id', methods=['POST'])
 @token_required
-def get_last_post_id(current_user):
+def send_last_post_id(current_user):
     logger_main.info(f"- accessed get_last_post_id endpoint")
 
     last_post = sess.query(RinconsPosts).order_by(RinconsPosts.id.desc()).first()
@@ -300,18 +300,13 @@ def get_last_post_id(current_user):
     return jsonify({"last_post_id":str(last_post.id)})
     # return str(last_post.id)
 
-
-@main.route('/receive_image', methods=['POST'])
+@main.route('/receive_rincon_post', methods=['POST'])
 @token_required
-def receive_image(current_user):
-    logger_main.info(f"- in receive_image endpoint")
-
-
+def receive_rincon_post(current_user):
+    logger_main.info(f"- in receive_rincon_post endpoint")
 
     try:
         request_json = request.json
-        
-
         rincon_id = int(request_json.get("rincon_id"))
         print(f"-Rincon_id {rincon_id}")
         post_id = int(request_json.get("post_id"))
@@ -319,18 +314,55 @@ def receive_image(current_user):
     except Exception as e:
         logger_users.info(e)
         return jsonify({"status": "httpBody data recieved not json not parse-able."})
+    
+    print(f"* received data: {request_json.get('rincon_post')}")
+    print(f"request_json: {request_json}")
+
+    post_text = request_json.get("post_text_ios")
+
+    new_post = RinconsPosts(post_text=post_text,user_id=current_user.id, rincon_id=rincon_id)
+    sess.add(new_post)
+    sess.commit()
+
+    print("new_post_id: ", new_post.id)
+
+    print("sent_post id: ", rincon_id)
+
+
+
+    return jsonify({"post_received_status":"success","new_post_id":str(new_post.id)})
+
+
+
+@main.route('/receive_image', methods=['POST'])
+@token_required
+def receive_image(current_user):
+    logger_main.info(f"- in receive_image endpoint")
+
+    try:
+        request_json = request.json
+        rincon_id = int(request_json.get("rincon_id"))
+        # logger_main.info(f"-Rincon_id {rincon_id}")
+        post_id = int(request_json.get("post_id"))
+        # logger_main.info(f"-Rincon_id {post_id}")
+        print("-----")
+        logger_main.info(f"-request_json: {request_json}")
+    except Exception as e:
+        logger_users.info(e)
+        return jsonify({"status": "httpBody data recieved not json not parse-able."})
 
     try:
         requestFiles = request.files
-        print(f"reqeustFiles: {requestFiles}")
+        logger_main.info(f"reqeustFiles: {requestFiles}")
+        # print(f"reqeustFiles: {requestFiles}")
     except Exception as e:
         logger_users.info(e)
         return jsonify({"status": "httpBody (files) data recieved not json not parse-able."})
     
-    print(requestFiles.getlist('add_file_photo'))
+    logger_main.info(requestFiles.getlist())
     path_to_rincon_files = os.path.join(current_app.config.get('DB_ROOT'), "rincon_files",this_rincon_dir_name)
     requestFiles.getlist('add_file_photo').save(os.path.join(path_to_rincon_files, new_image_name))
 
     logger_main.info(f"- in receive_image endpoint")
 
-    return jsonify({"image_received_status":str(last_post.id)})
+    return jsonify({"image_received_status":"Successfully send images and executed /receive_image endpoint "})
