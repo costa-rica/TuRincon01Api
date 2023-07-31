@@ -369,7 +369,7 @@ def receive_image(current_user):
         return jsonify({"status": "Image Not found."})
 
 
-
+    
     for file_name, post_image in requestFiles.items():
         print("")
         # logger_main.info(requestFiles.getlist())
@@ -389,23 +389,24 @@ def receive_image(current_user):
         post_obj = sess.query(RinconsPosts).filter_by(id = post_id).first()
         logger_main.info(f"post_obj")
         logger_main.info(f"post_obj.rincon_id: {post_obj.rincon_id}")
-        this_rincon_dir_name="9_TestComments"
+        logger_main.info(f"post_obj.posts_ref_rincons.name_no_spaces: {post_obj.posts_ref_rincons.name_no_spaces}")
+        this_rincon_dir_name=post_obj.posts_ref_rincons.name_no_spaces
 
         path_to_rincon_files = os.path.join(current_app.config.get('DB_ROOT'), "rincon_files",this_rincon_dir_name)
         # requestFiles.getlist('add_file_photo').save(os.path.join(path_to_rincon_files, new_image_name))
         post_image.save(os.path.join(path_to_rincon_files, post_image_filename))
 
         # filename: uiimageName: user_1_post_66_image_1.jpeg
-        post_containing_image = sess.query(RinconsPosts).filter_by(id=post_id).first()
+        # post_containing_image = sess.query(RinconsPosts).filter_by(id=post_id).first()
 
-        logger_main.info(f"---> what is post_containing_image.image_file_name: {post_containing_image.image_file_name}")
+        logger_main.info(f"---> what is post_obj.image_file_name: {post_obj.image_file_name}")
 
-        if post_containing_image.image_file_name in ["", None]:
+        if post_obj.image_file_name in ["", None]:
             logger_main.info(f"- Path SHOULD be taken: for {post_image_filename}")
-            post_containing_image.image_file_name = post_image_filename
+            post_obj.image_file_name = post_image_filename
         else:
             logger_main.info(f"- Path should NOT be taken: for {post_image_filename}")
-            post_containing_image.image_file_name = post_containing_image.image_file_name + ", " + post_image_filename
+            post_obj.image_file_name = post_obj.image_file_name + ", " + post_image_filename
         
         sess.commit()
 
