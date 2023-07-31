@@ -390,7 +390,7 @@ def receive_image(current_user):
         logger_main.info(f"post_obj")
         logger_main.info(f"post_obj.rincon_id: {post_obj.rincon_id}")
         logger_main.info(f"post_obj.posts_ref_rincons.name_no_spaces: {post_obj.posts_ref_rincons.name_no_spaces}")
-        this_rincon_dir_name=post_obj.posts_ref_rincons.name_no_spaces
+        this_rincon_dir_name=post_obj.rincon_id + "_" + post_obj.posts_ref_rincons.name_no_spaces
 
         path_to_rincon_files = os.path.join(current_app.config.get('DB_ROOT'), "rincon_files",this_rincon_dir_name)
         # requestFiles.getlist('add_file_photo').save(os.path.join(path_to_rincon_files, new_image_name))
