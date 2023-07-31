@@ -65,7 +65,8 @@ def login():
     if bcrypt.checkpw(auth.password.encode(), user.password):
 
         token = create_token(user)
-        user_rincons = [[str(i.rincon.id), i.rincon.name] for i in user.rincons]
+        # user_rincons = [[str(i.rincon.id), i.rincon.name, i.rincon.name_no_spaces] for i in user.rincons]
+        user_rincons = [{"id":str(i.rincon.id), "name":i.rincon.name, "name_no_spaces":i.rincon.name_no_spaces} for i in user.rincons]
         
 
         return jsonify({'token': token,'user_id':str(user.id), 'user_rincons': user_rincons})
