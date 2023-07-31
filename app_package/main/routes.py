@@ -80,6 +80,7 @@ def rincon(current_user, rincon_id):
 @token_required
 def rincon_file(current_user, file_name):
     print("*** calling for images ***")
+    logger_main.info(f"- in rincon_post_file endpoint, calling for :: {file_name}")
 
     try:
         request_json = request.json
@@ -298,7 +299,20 @@ def send_last_post_id(current_user):
     last_post = sess.query(RinconsPosts).order_by(RinconsPosts.id.desc()).first()
 
     return jsonify({"last_post_id":str(last_post.id)})
-    # return str(last_post.id)
+
+
+@main.route('/claim_a_post_id/<rincon_id>', methods=['POST'])
+@token_required
+def claim_a_post_id(current_user, rincon_id):
+    logger_main.info(f"- accessed claim_a_post_id endpoint")
+
+    # last_post = sess.query(RinconsPosts).order_by(RinconsPosts.id.desc()).first()
+    new_post = RinconsPosts(user_id=current_user.id, rincon_id=rincon_id)
+    sess.add(new_post)
+    sess.commit()
+    logger_main.info(f"- sending post_id: {new_post.id}")
+
+    return jsonify({"new_post_id":str(new_post.id)})
 
 @main.route('/receive_rincon_post', methods=['POST'])
 @token_required
@@ -308,61 +322,93 @@ def receive_rincon_post(current_user):
     try:
         request_json = request.json
         rincon_id = int(request_json.get("rincon_id"))
-        print(f"-Rincon_id {rincon_id}")
+        logger_main.info(f"-Rincon_id {rincon_id}")
         post_id = int(request_json.get("post_id"))
-        print(f"-Rincon_id {post_id}")
+        logger_main.info(f"-Rincon_id {post_id}")
     except Exception as e:
         logger_users.info(e)
         return jsonify({"status": "httpBody data recieved not json not parse-able."})
     
-    print(f"* received data: {request_json.get('rincon_post')}")
-    print(f"request_json: {request_json}")
-
+    logger_main.info(f"* received data: {request_json.get('rincon_post')}")
+    # print(f"request_json: {request_json}")
+    
     post_text = request_json.get("post_text_ios")
 
-    new_post = RinconsPosts(post_text=post_text,user_id=current_user.id, rincon_id=rincon_id)
-    sess.add(new_post)
+    new_post = sess.query(RinconsPosts).filter_by(id=post_id).first()
+    new_post.post_text = post_text
+
+
+    # new_post = RinconsPosts(post_text=post_text,user_id=current_user.id, rincon_id=rincon_id)
+    # sess.add(new_post)
     sess.commit()
 
-    print("new_post_id: ", new_post.id)
+    # logger_main.info("new_post_id: ", post_id)
 
-    print("sent_post id: ", rincon_id)
+    # logger_main.info("sent_rincon id: ", rincon_id)
 
 
 
-    return jsonify({"post_received_status":"success","new_post_id":str(new_post.id)})
+    return jsonify({"post_received_status":"success","new_post_id":str(post_id)})
 
 
 
 @main.route('/receive_image', methods=['POST'])
 @token_required
 def receive_image(current_user):
+    logger_main.info("------------------------------------------------")
     logger_main.info(f"- in receive_image endpoint")
-
-    try:
-        request_json = request.json
-        rincon_id = int(request_json.get("rincon_id"))
-        # logger_main.info(f"-Rincon_id {rincon_id}")
-        post_id = int(request_json.get("post_id"))
-        # logger_main.info(f"-Rincon_id {post_id}")
-        print("-----")
-        logger_main.info(f"-request_json: {request_json}")
-    except Exception as e:
-        logger_users.info(e)
-        return jsonify({"status": "httpBody data recieved not json not parse-able."})
+    logger_main.info("------------------------------------------------")
 
     try:
         requestFiles = request.files
         logger_main.info(f"reqeustFiles: {requestFiles}")
-        # print(f"reqeustFiles: {requestFiles}")
-    except Exception as e:
-        logger_users.info(e)
-        return jsonify({"status": "httpBody (files) data recieved not json not parse-able."})
-    
-    logger_main.info(requestFiles.getlist())
-    path_to_rincon_files = os.path.join(current_app.config.get('DB_ROOT'), "rincon_files",this_rincon_dir_name)
-    requestFiles.getlist('add_file_photo').save(os.path.join(path_to_rincon_files, new_image_name))
 
-    logger_main.info(f"- in receive_image endpoint")
+    except Exception as e:
+        logger_main.info(e)
+        logger_main.info(f"requestFiles not found")
+        return jsonify({"status": "Image Not found."})
+
+
+
+    for file_name, post_image in requestFiles.items():
+        print("")
+        # logger_main.info(requestFiles.getlist())
+
+        post_image_filename = post_image.filename
+        # logger_main.info(f"----> post_image_filename: {file_extension} <-- *******")
+        filename_no_extension, file_extension = os.path.splitext(post_image_filename)
+        logger_main.info(f"-- post_image_filename: {post_image_filename} --")
+
+        # _, user_id, _, post_id,_, img_count = filename_no_extension.split("_")
+        _, post_id, _, image_id = filename_no_extension.split('_')
+        logger_main.info(f"post_id: {post_id}, img_count: {image_id}")
+
+
+        ## save to static rincon directory
+        # this_rincon_dir_name = f"{rincon_id}_{rincon.name_no_spaces}"
+        post_obj = sess.query(RinconsPosts).filter_by(id = post_id).first()
+        logger_main.info(f"post_obj")
+        logger_main.info(f"post_obj.rincon_id: {post_obj.rincon_id}")
+        this_rincon_dir_name="9_TestComments"
+
+        path_to_rincon_files = os.path.join(current_app.config.get('DB_ROOT'), "rincon_files",this_rincon_dir_name)
+        # requestFiles.getlist('add_file_photo').save(os.path.join(path_to_rincon_files, new_image_name))
+        post_image.save(os.path.join(path_to_rincon_files, post_image_filename))
+
+        # filename: uiimageName: user_1_post_66_image_1.jpeg
+        post_containing_image = sess.query(RinconsPosts).filter_by(id=post_id).first()
+
+        logger_main.info(f"---> what is post_containing_image.image_file_name: {post_containing_image.image_file_name}")
+
+        if post_containing_image.image_file_name in ["", None]:
+            logger_main.info(f"- Path SHOULD be taken: for {post_image_filename}")
+            post_containing_image.image_file_name = post_image_filename
+        else:
+            logger_main.info(f"- Path should NOT be taken: for {post_image_filename}")
+            post_containing_image.image_file_name = post_containing_image.image_file_name + ", " + post_image_filename
+        
+        sess.commit()
+
+    logger_main.info(f"- finished receive_image endpoint")
 
     return jsonify({"image_received_status":"Successfully send images and executed /receive_image endpoint "})
