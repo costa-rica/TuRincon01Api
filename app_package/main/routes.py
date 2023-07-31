@@ -406,7 +406,7 @@ def receive_image(current_user):
             post_obj.image_file_name = post_image_filename
         else:
             logger_main.info(f"- Path should NOT be taken: for {post_image_filename}")
-            post_obj.image_file_name = post_obj.image_file_name + ", " + post_image_filename
+            post_obj.image_file_name = post_obj.image_file_name + "," + post_image_filename
         
         sess.commit()
 
