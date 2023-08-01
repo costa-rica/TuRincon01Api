@@ -100,6 +100,7 @@ def create_rincon_post_dict(current_user,rincon_id, post_id):
     post_dict['date_for_sorting'] = post.time_stamp_utc
     post_dict['date_for_sorting_ios'] = post.time_stamp_utc.strftime("%Y-%m-%d %H:%M:%S.%f")
     post_dict['username'] = sess.get(Users,post.user_id).username
+    post_dict['user_id'] = str(sess.get(Users,post.user_id).id)
     post_dict['rincon_id'] = str(rincon_id)
 
     if post.post_text == None:

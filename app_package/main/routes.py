@@ -413,3 +413,31 @@ def receive_image(current_user):
     logger_main.info(f"- finished receive_image endpoint")
 
     return jsonify({"image_received_status":"Successfully send images and executed /receive_image endpoint "})
+
+
+
+@main.route('/delete_post/<post_id>', methods=['POST'])
+@token_required
+def delete_post(current_user, post_id):
+    logger_main.info("------------------------------------------------")
+    logger_main.info(f"- in delete_post endpoint")
+    logger_main.info("------------------------------------------------")
+
+    rincon_post = sess.get(RinconsPosts, post_id)
+
+    if rincon_post.image_file_name != None:
+        image_names = rincon_post.image_file_name.split(",")
+        for image_name in image_names:
+            post_image_path_and_name = os.path.join(current_app.config.get('DB_ROOT'), 
+                "rincon_files", f"{rincon_post.rincon_id}_{rincon_post.posts_ref_rincons.name_no_spaces}",image_name)
+        
+            logger_main.info(f"post_image_path_and_name: {post_image_path_and_name}")
+            if os.path.exists(post_image_path_and_name):
+                os.remove(post_image_path_and_name)
+    sess.query(RinconsPosts).filter_by(id = post_id).delete()
+    sess.query(RinconsPostsLikes).filter_by(post_id = post_id).delete()
+    sess.query(RinconsPostsComments).filter_by(post_id = post_id).delete()
+    sess.query(RinconsPostsCommentsLikes).filter_by(post_id = post_id).delete()
+    sess.commit()
+
+    return jsonify({"deleted_post_id":post_id})
