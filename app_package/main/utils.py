@@ -6,6 +6,7 @@ import os
 import re
 import urlextract
 from flask_login import current_user
+from datetime import datetime
 
 
 formatter = logging.Formatter('%(asctime)s:%(name)s:%(message)s')
@@ -82,6 +83,32 @@ def create_rincon_posts_list(current_user, rincon_id):
     rincon_posts = sorted(rincon_posts, key=lambda d: d['date_for_sorting'], reverse=True)
 
     return rincon_posts
+
+
+def create_empty_rincon_post_dict(current_user,rincon_id ):
+
+    rincon = sess.get(Rincons,rincon_id)
+
+    # rincon_posts = []
+    # if current_user.is_authenticated:
+    #     user_likes = current_user.post_like
+        # user_likes_this_rincon = [like.post_id  for like in user_likes if like.rincon_id == rincon.id]
+
+    # post = sess.query(RinconsPosts).filter_by(id=post_id).first()
+    # for i in rincon.posts:
+    post_dict = {}
+
+    post_dict['post_id'] = "999"
+    post_dict['date_for_sorting'] = datetime.now()
+    post_dict['date_for_sorting_ios'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+    post_dict['username'] = ""
+    post_dict['user_id'] = "1"
+    post_dict['rincon_id'] = str(rincon_id)
+    post_dict['post_text_ios'] = "No Posts Yet"
+    post_dict['liked'] = False
+    post_dict['like_count'] = 0
+
+    return [post_dict]
 
 def create_rincon_post_dict(current_user,rincon_id, post_id):
 

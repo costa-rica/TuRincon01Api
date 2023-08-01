@@ -7,7 +7,8 @@ from logging.handlers import RotatingFileHandler
 from tr01_models import sess, Users, Rincons, RinconsPosts, UsersToRincons, \
     RinconsPostsComments, RinconsPostsLikes, RinconsPostsCommentsLikes
 from app_package.token_decorator import token_required
-from app_package.main.utils import create_rincon_posts_list, create_rincon_post_dict
+from app_package.main.utils import create_rincon_posts_list, create_rincon_post_dict, \
+    create_empty_rincon_post_dict
 import json
 import time
 import socket
@@ -71,9 +72,12 @@ def rincon(current_user, rincon_id):
 
     posts_list = create_rincon_posts_list(current_user, rincon_id)
 
-    # print("----------")
-    # print(posts_list)
-    # print("-----------")
+    if len(posts_list) == 0:
+        print("add a post")
+        posts_list = create_empty_rincon_post_dict(current_user,rincon_id )
+    print("----------")
+    print(posts_list)
+    print("-----------")
     return jsonify(posts_list)
 
 @main.route("/rincon_post_file/<file_name>", methods=["POST"])
