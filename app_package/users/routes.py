@@ -105,13 +105,23 @@ def register():
     except:
         return jsonify({"status": f"failed to add to database."})
 
-
+    new_user_dict_response = {}
+    new_user_dict_response["id"]=new_user.id
+    new_user_dict_response["email"]=new_user.email
+    new_user_dict_response["username"]=new_user.username
+    costa_rica_rincon = sess.get(Rincons,1)
+    new_user_dict_response["user_rincons"]={"id":str(costa_rica_rincon.id),
+        "name":costa_rica_rincon.name,"name_no_spaces":costa_rica_rincon.name_no_spaces}
     #log user in
-    # print('--- new_user ---')
-    # print(new_user)
+    
+    
     token = create_token(new_user)
+    new_user_dict_response["token"]=token
+    logger_users.info('--- new_user ---')
+    logger_users.info(new_user)
 
-    return jsonify({'token': token,'user_id':str(new_user.id)})
+    # return jsonify({'token': token,'user_id':str(new_user.id)})
+    return jsonify(new_user_dict_response)
 
     # return jsonify({"user_id":str(new_user.id)})
 
