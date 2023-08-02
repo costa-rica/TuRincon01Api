@@ -10,9 +10,10 @@ from logging.handlers import RotatingFileHandler
 import os
 import json
 from tr01_models import sess, engine, text, Base, \
-    Users
+    Users, Rincons
 
 from app_package.users.utils import create_token, send_reset_email, send_confirm_email
+from app_package.main.utils import addUserToRincon
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from app_package.token_decorator import token_required
 
@@ -83,13 +84,12 @@ def register():
 
     try:
         request_json = request.json
-        # print("request_json:",request_json)
+        print("request_json:",request_json)
     except Exception as e:
         logger_users.info(e)
         return jsonify({"status": "httpBody data recieved not json not parse-able."})
-
         
-    new_email = request_json.get('email')
+    new_email = request_json.get('new_email')
 
     check_email = sess.query(Users).filter_by(email = new_email).all()
     if len(check_email)==1:
@@ -97,13 +97,22 @@ def register():
         existing_emails = [i.email for i in sess.query(Users).all()]
         return jsonify({"existing_emails": existing_emails})
 
-    hash_pw = bcrypt.hashpw(request_json.get('password').encode(), salt)
+    hash_pw = bcrypt.hashpw(request_json.get('new_password').encode(), salt)
     new_user = Users(email = new_email, password = hash_pw)
     try:
         sess.add(new_user)
         sess.commit()
     except:
         return jsonify({"status": f"failed to add to database."})
+
+    
+    logger_users.info(f"- new_user.id: {new_user.id} -")
+
+
+    try:
+        addUserToRincon(new_user.id, 1)
+    except:
+        logger_users.info(f"- Unable to add user {user_id} -")
 
     new_user_dict_response = {}
     new_user_dict_response["id"]=new_user.id

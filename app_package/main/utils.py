@@ -198,3 +198,11 @@ def create_rincon_post_dict(current_user,rincon_id, post_id):
 
 
     return post_dict
+
+
+def addUserToRincon(user_id, rincon_id):
+
+    new_member = UsersToRincons(users_table_id = user_id, rincons_table_id= rincon_id)
+    sess.add(new_member)
+    sess.commit()
+    logger_main.info(f"- User {user_id} successfully added to rincon_id: {rincon_id} -")

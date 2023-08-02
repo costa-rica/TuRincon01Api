@@ -75,9 +75,9 @@ def rincon(current_user, rincon_id):
     if len(posts_list) == 0:
         print("add a post")
         posts_list = create_empty_rincon_post_dict(current_user,rincon_id )
-    print("----------")
-    print(posts_list)
-    print("-----------")
+    # print("----------")
+    # print(posts_list)
+    # print("-----------")
     return jsonify(posts_list)
 
 @main.route("/rincon_post_file/<file_name>", methods=["POST"])
