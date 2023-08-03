@@ -206,3 +206,24 @@ def addUserToRincon(user_id, rincon_id):
     sess.add(new_member)
     sess.commit()
     logger_main.info(f"- User {user_id} successfully added to rincon_id: {rincon_id} -")
+
+def create_dict_rincon_ios(user_id, rincon_id):
+    logger_main.info(f"- create_dict_rincon_ios: user_id: {user_id}, rincon_id: {rincon_id}")
+    rincon = sess.get(Rincons, rincon_id)
+    logger_main.info(f"- rincon: {rincon}")
+    user_to_rincon = sess.get(UsersToRincons,(user_id,rincon_id))
+    logger_main.info(f"- user_to_rincon: {user_to_rincon}")
+    
+
+    dict_rincon_ios = {}
+    dict_rincon_ios['id']=rincon_id
+    dict_rincon_ios['name']=rincon.name
+    dict_rincon_ios['name_no_spaces']=rincon.name_no_spaces
+
+    dict_rincon_ios['permission_view']=user_to_rincon.permission_view
+    dict_rincon_ios['permission_like']=user_to_rincon.permission_like
+    dict_rincon_ios['permission_comment']=user_to_rincon.permission_comment
+    dict_rincon_ios['permission_post']=user_to_rincon.permission_post
+    dict_rincon_ios['permission_admin']=user_to_rincon.permission_admin
+
+    return dict_rincon_ios

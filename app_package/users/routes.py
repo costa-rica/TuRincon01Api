@@ -12,8 +12,9 @@ import json
 from tr01_models import sess, engine, text, Base, \
     Users, Rincons
 
-from app_package.users.utils import create_token, send_reset_email, send_confirm_email
-from app_package.main.utils import addUserToRincon
+from app_package.users.utils import create_token, send_reset_email, send_confirm_email, \
+    create_dict_user_ios
+from app_package.main.utils import addUserToRincon, create_dict_rincon_ios
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from app_package.token_decorator import token_required
 
@@ -66,11 +67,21 @@ def login():
     if bcrypt.checkpw(auth.password.encode(), user.password):
 
         token = create_token(user)
-        # user_rincons = [[str(i.rincon.id), i.rincon.name, i.rincon.name_no_spaces] for i in user.rincons]
-        user_rincons = [{"id":str(i.rincon.id), "name":i.rincon.name, "name_no_spaces":i.rincon.name_no_spaces} for i in user.rincons]
+        user_rincons = [[str(i.rincon.id), i.rincon.name, i.rincon.name_no_spaces] for i in user.rincons]
+        # user_rincons = create_dict_rincon_ios(user_id, rincon_id)
         
+        user_rincons_ios = []
+        for rincon_info in user_rincons:
+            user_rincons_ios.append(create_dict_rincon_ios(user.id, rincon_info[0]))
+            # logger_users.info(f"--- user_rincons_w_permisssions: {user_rincons}")
+        # return jsonify({'token': token,'user_id':str(user.id), 'user_rincons': user_rincons})
+        dict_user_ios = create_dict_user_ios(user.id)
+        dict_user_ios['token'] = token
+        dict_user_ios['user_rincons'] = user_rincons_ios
 
-        return jsonify({'token': token,'user_id':str(user.id), 'user_rincons': user_rincons})
+
+        logger_users.info(f"--- dict_user_ios: {dict_user_ios}")
+        return jsonify(dict_user_ios)
 
     return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})
 
@@ -95,6 +106,7 @@ def register():
     if len(check_email)==1:
         logger_users.info(f"- email already in database -")
         existing_emails = [i.email for i in sess.query(Users).all()]
+        # logger_users.info(f"- sending: {jsonify({'existing_emails': existing_emails})} -")
         return jsonify({"existing_emails": existing_emails})
 
     hash_pw = bcrypt.hashpw(request_json.get('new_password').encode(), salt)
@@ -108,20 +120,25 @@ def register():
     
     logger_users.info(f"- new_user.id: {new_user.id} -")
 
-
     try:
         addUserToRincon(new_user.id, 1)
     except:
         logger_users.info(f"- Unable to add user {user_id} -")
 
+    costa_rica_rincon = sess.get(Rincons,1)
+
     new_user_dict_response = {}
-    new_user_dict_response["id"]=new_user.id
+    new_user_dict_response["id"]=str(new_user.id)
     new_user_dict_response["email"]=new_user.email
     new_user_dict_response["username"]=new_user.username
-    costa_rica_rincon = sess.get(Rincons,1)
-    new_user_dict_response["user_rincons"]={"id":str(costa_rica_rincon.id),
-        "name":costa_rica_rincon.name,"name_no_spaces":costa_rica_rincon.name_no_spaces}
-    #log user in
+    new_user_dict_response["user_rincons"]= [create_dict_rincon_ios(new_user.id, costa_rica_rincon.id)]
+    
+    # {"id":str(costa_rica_rincon.id),
+    #     "name":costa_rica_rincon.name,
+    #     "name_no_spaces":costa_rica_rincon.name_no_spaces}.update(
+    #         rincon_permissions_dict(new_user.id, costa_rica_rincon.id)
+    #     )
+
     
     
     token = create_token(new_user)

@@ -74,3 +74,19 @@ def send_confirm_email(email):
         logger_main.info(f"-- email sent --")
     else :
         logger_main.info(f"-- Non prod mode so no email sent --")
+
+def create_dict_user_ios(user_id):
+    logger_main.info(f"- create_dict_user: user_id: {user_id}")
+    user = sess.get(Users, user_id)
+    logger_main.info(f"- user: {user}")
+    
+    dict_user_ios = {}
+    dict_user_ios['id']=str(user.id)
+    dict_user_ios['email']=user.email
+    dict_user_ios['username']=user.username
+    dict_user_ios['admin']=user.admin
+    # dict_user_ios['rincons']=user.rincons
+
+    return dict_user_ios
+
+
