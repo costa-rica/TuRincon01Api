@@ -8,7 +8,7 @@ from tr01_models import sess, Users, Rincons, RinconsPosts, UsersToRincons, \
     RinconsPostsComments, RinconsPostsLikes, RinconsPostsCommentsLikes
 from app_package.token_decorator import token_required
 from app_package.main.utils import create_rincon_posts_list, create_rincon_post_dict, \
-    create_empty_rincon_post_dict
+    create_empty_rincon_post_dict, create_dict_rincon_ios
 import json
 import time
 import socket
@@ -445,3 +445,35 @@ def delete_post(current_user, post_id):
     sess.commit()
 
     return jsonify({"deleted_post_id":post_id})
+
+
+@main.route('/search_rincons/', methods=['POST'])
+@token_required
+def search_rincons(current_user):
+    # logger_main.info("------------------------------------------------")
+    logger_main.info(f"- in search_rincons endpoint")
+    logger_main.info("------------------------------------------------")
+
+
+    availible_rincons = sess.query(Rincons).filter_by(public=True).all()
+    # user = sess.get(Users,current_user.id)
+    user_rincons = [i.rincon for i in current_user.rincons ]
+
+    for rincon in user_rincons:
+        if rincon not in availible_rincons:
+            availible_rincons.append(rincon)
+
+    availible_rincons_sorted = sorted(availible_rincons, key=lambda rincon: rincon.id)
+
+    list_rincons_to_send_ios = []
+    for rincon in availible_rincons_sorted:
+        list_rincons_to_send_ios.append(create_dict_rincon_ios(current_user.id, rincon.id))
+
+    # list_rincons = create_search_rincon_list(current_user.id)
+    # list_rincons_to_send_ios_sorted = sorted(list_rincons_to_send_ios, key=lambda rincon: rincon.id)
+    
+    logger_main.info(list_rincons_to_send_ios)
+    logger_main.info("------------------------------------------------")
+    
+    return jsonify(list_rincons_to_send_ios)
+

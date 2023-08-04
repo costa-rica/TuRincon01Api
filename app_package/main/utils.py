@@ -207,6 +207,8 @@ def addUserToRincon(user_id, rincon_id):
     sess.commit()
     logger_main.info(f"- User {user_id} successfully added to rincon_id: {rincon_id} -")
 
+
+
 def create_dict_rincon_ios(user_id, rincon_id):
     logger_main.info(f"- create_dict_rincon_ios: user_id: {user_id}, rincon_id: {rincon_id}")
     rincon = sess.get(Rincons, rincon_id)
@@ -216,14 +218,70 @@ def create_dict_rincon_ios(user_id, rincon_id):
     
 
     dict_rincon_ios = {}
-    dict_rincon_ios['id']=rincon_id
+    dict_rincon_ios['id']=str(rincon_id)
     dict_rincon_ios['name']=rincon.name
     dict_rincon_ios['name_no_spaces']=rincon.name_no_spaces
-
-    dict_rincon_ios['permission_view']=user_to_rincon.permission_view
-    dict_rincon_ios['permission_like']=user_to_rincon.permission_like
-    dict_rincon_ios['permission_comment']=user_to_rincon.permission_comment
-    dict_rincon_ios['permission_post']=user_to_rincon.permission_post
-    dict_rincon_ios['permission_admin']=user_to_rincon.permission_admin
+    dict_rincon_ios['public_status']=rincon.public
+    if user_to_rincon:
+        dict_rincon_ios['member']=True
+        dict_rincon_ios['permission_view']=user_to_rincon.permission_view
+        dict_rincon_ios['permission_like']=user_to_rincon.permission_like
+        dict_rincon_ios['permission_comment']=user_to_rincon.permission_comment
+        dict_rincon_ios['permission_post']=user_to_rincon.permission_post
+        dict_rincon_ios['permission_admin']=user_to_rincon.permission_admin
+    # else:
+    #     dict_rincon_ios['permission_view']=True
+    #     dict_rincon_ios['permission_like']=False
+    #     dict_rincon_ios['permission_comment']=False
+    #     dict_rincon_ios['permission_post']=False
+    #     dict_rincon_ios['permission_admin']=False
 
     return dict_rincon_ios
+
+
+# def create_dict_rincon_ios(rincon_id, user_id):
+#     rincon = sess.get(Rincons, rincon_id)
+#     rincon_dict = {}
+#     rincon_dict["id"] = str(rincon.id)
+#     rincon_dict["name"] = rincon.name
+#     rincon_dict["name_no_spaces"] = rincon.name_no_spaces
+#     rincon_dict["public_status"] = rincon.public
+    
+#     user_to_rincon = sess.query(UsersToRincons).filter_by(
+#             users_table_id = user_id, rincons_table_id=rincon.id).first()
+#     if user_to_rincon:
+#         rincon_dict["permission_view"] = user_to_rincon.permission_view
+#         rincon_dict["permission_like"] = user_to_rincon.permission_like
+#         rincon_dict["permission_comment"] = user_to_rincon.permission_comment
+#         rincon_dict["permission_post"] = user_to_rincon.permission_post
+#         rincon_dict["permission_admin"] = user_to_rincon.permission_admin
+    
+#     return rincon_dict
+
+# def create_search_rincon_list(user_id):
+#     rincon_list = sess.query(Rincons).filter_by(public=True).all()
+
+#     list_rincons_search = []
+#     for rincon in rincon_list:
+#         temp_dict = {}
+#         temp_dict["id"] = str(rincon.id)
+#         temp_dict["name"] = rincon.name
+#         temp_dict["name_no_spaces"] = rincon.name_no_spaces
+#         temp_dict["public_status"] = rincon.public
+
+#         user_to_rincon = sess.query(UsersToRincons).filter_by(
+#             users_table_id = user_id, rincons_table_id=rincon.id).first()
+#         if user_to_rincon:
+#             temp_dict["permission_view"] = user_to_rincon.permission_view
+#             temp_dict["permission_like"] = user_to_rincon.permission_like
+#             temp_dict["permission_comment"] = user_to_rincon.permission_comment
+#             temp_dict["permission_post"] = user_to_rincon.permission_post
+#             temp_dict["permission_admin"] = user_to_rincon.permission_admin
+        
+#         list_rincons_search.append(temp_dict)
+#     return list_rincons_search
+
+
+
+
+
