@@ -359,9 +359,9 @@ def receive_rincon_post(current_user):
 @main.route('/receive_image', methods=['POST'])
 @token_required
 def receive_image(current_user):
-    logger_main.info("------------------------------------------------")
+    # logger_main.info("------------------------------------------------")
     logger_main.info(f"- in receive_image endpoint")
-    logger_main.info("------------------------------------------------")
+    # logger_main.info("------------------------------------------------")
 
     try:
         requestFiles = request.files
@@ -423,9 +423,9 @@ def receive_image(current_user):
 @main.route('/delete_post/<post_id>', methods=['POST'])
 @token_required
 def delete_post(current_user, post_id):
-    logger_main.info("------------------------------------------------")
+    # logger_main.info("------------------------------------------------")
     logger_main.info(f"- in delete_post endpoint")
-    logger_main.info("------------------------------------------------")
+    # logger_main.info("------------------------------------------------")
 
     rincon_post = sess.get(RinconsPosts, post_id)
 
@@ -452,7 +452,7 @@ def delete_post(current_user, post_id):
 def search_rincons(current_user):
     # logger_main.info("------------------------------------------------")
     logger_main.info(f"- in search_rincons endpoint")
-    logger_main.info("------------------------------------------------")
+    # logger_main.info("------------------------------------------------")
 
 
     availible_rincons = sess.query(Rincons).filter_by(public=True).all()
@@ -472,8 +472,46 @@ def search_rincons(current_user):
     # list_rincons = create_search_rincon_list(current_user.id)
     # list_rincons_to_send_ios_sorted = sorted(list_rincons_to_send_ios, key=lambda rincon: rincon.id)
     
-    logger_main.info(list_rincons_to_send_ios)
-    logger_main.info("------------------------------------------------")
+    # logger_main.info(list_rincons_to_send_ios)
+    # logger_main.info("------------------------------------------------")
     
     return jsonify(list_rincons_to_send_ios)
+
+
+
+@main.route('/rincon_membership/', methods=['POST'])
+@token_required
+def rincon_membership(current_user):
+    # logger_main.info("------------------------------------------------")
+    logger_main.info(f"- in rincon_membership endpoint")
+
+    try:
+        request_json = request.json
+        rincon_id = int(request_json.get("id"))
+        logger_main.info(f"-Rincon_id {rincon_id}")
+        # post_id = int(request_json.get("post_id"))
+        # logger_main.info(f"-Rincon_id {post_id}")
+    except Exception as e:
+        logger_main.info(e)
+        return jsonify({"status": "httpBody data recieved not json not parse-able."})
+
+
+    user_to_rincon = sess.get(UsersToRincons, (current_user.id, rincon_id))
+
+    status = "unknown"
+
+    if user_to_rincon:
+        sess.query(UsersToRincons).filter_by(users_table_id=current_user.id,rincons_table_id=rincon_id).delete()
+        logger_main.info(f"-Removed user_id: {current_user.id} to Rincon_id {rincon_id}")
+        status="removed user"
+    else:
+        new_membership = UsersToRincons(users_table_id=current_user.id,rincons_table_id=rincon_id)
+        sess.add(new_membership)
+        logger_main.info(f"-Added user_id: {current_user.id} to Rincon_id {rincon_id}")
+        status="added user"
+    
+    sess.commit()
+
+    return jsonify({"status":status, "rincon_id":str(rincon_id)})
+
 
