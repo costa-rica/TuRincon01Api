@@ -334,23 +334,13 @@ def receive_rincon_post(current_user):
         return jsonify({"status": "httpBody data recieved not json not parse-able."})
     
     logger_main.info(f"* received data: {request_json.get('rincon_post')}")
-    # print(f"request_json: {request_json}")
     
     post_text = request_json.get("post_text_ios")
 
     new_post = sess.query(RinconsPosts).filter_by(id=post_id).first()
     new_post.post_text = post_text
 
-
-    # new_post = RinconsPosts(post_text=post_text,user_id=current_user.id, rincon_id=rincon_id)
-    # sess.add(new_post)
     sess.commit()
-
-    # logger_main.info("new_post_id: ", post_id)
-
-    # logger_main.info("sent_rincon id: ", rincon_id)
-
-
 
     return jsonify({"post_received_status":"success","new_post_id":str(post_id)})
 
@@ -478,7 +468,6 @@ def search_rincons(current_user):
     return jsonify(list_rincons_to_send_ios)
 
 
-
 @main.route('/rincon_membership/', methods=['POST'])
 @token_required
 def rincon_membership(current_user):
@@ -513,5 +502,67 @@ def rincon_membership(current_user):
     sess.commit()
 
     return jsonify({"status":status, "rincon_id":str(rincon_id)})
+
+@main.route('/create_a_rincon/', methods=['POST'])
+@token_required
+def create_a_rincon(current_user):
+    # logger_main.info("------------------------------------------------")
+    logger_main.info(f"- in create_a_rincon endpoint")
+
+    try:
+        request_json = request.json
+        new_rincon_name = request_json.get("new_rincon_name")
+        logger_main.info(f"-new_rincon_name: {new_rincon_name}")
+
+    except Exception as e:
+        logger_main.info(e)
+        return jsonify({"status": "httpBody data recieved not json not parse-able."})
+
+    logger_main.info(f"- Phase 1")
+
+    is_public = True if request_json.get("is_public") == "true" else False
+
+    if new_rincon_name != "":
+
+        logger_main.info(f"- Phase 2")
+        
+        rincon_name_no_spaces = new_rincon_name.replace(" ","_")
+
+        #create_rincon
+        new_rincon = Rincons(name= new_rincon_name, manager_id=current_user.id, 
+            public=is_public, name_no_spaces = rincon_name_no_spaces)
+        sess.add(new_rincon)
+        sess.commit()
+
+        logger_main.info(f"-new_rincon added and here's the id:::: {new_rincon.id}")
+
+        #add current_user as member
+        new_member = UsersToRincons(users_table_id = current_user.id,
+            rincons_table_id= new_rincon.id,
+            permission_like=True,
+            permission_comment=True,
+            permission_post=True,
+            permission_admin=True
+            )
+        sess.add(new_member)
+        sess.commit()
+
+        new_rincon_ios = create_dict_rincon_ios(current_user.id, new_rincon.id)
+        
+        logger_main.info(f"-new_rincon membership:::: {new_rincon_ios.get('member')}")
+        
+        #create static/rincon_files/<id_rincon_name>
+        direcotry_name = f"{new_rincon.id}_{rincon_name_no_spaces}"
+        new_dir_path = os.path.join(current_app.config.get('DB_ROOT'),"rincon_files", direcotry_name)
+
+        # print(new_dir_path)
+        os.mkdir(new_dir_path)
+
+        
+    
+    return jsonify(new_rincon_ios)
+
+
+
 
 
