@@ -513,7 +513,6 @@ def rincon_membership(current_user):
 @main.route('/create_a_rincon/', methods=['POST'])
 @token_required
 def create_a_rincon(current_user):
-    # logger_main.info("------------------------------------------------")
     logger_main.info(f"- in create_a_rincon endpoint")
 
     try:
@@ -525,13 +524,9 @@ def create_a_rincon(current_user):
         logger_main.info(e)
         return jsonify({"status": "httpBody data recieved not json not parse-able."})
 
-    logger_main.info(f"- Phase 1")
-
     is_public = True if request_json.get("is_public") == "true" else False
 
     if new_rincon_name != "":
-
-        logger_main.info(f"- Phase 2")
         
         rincon_name_no_spaces = new_rincon_name.replace(" ","_")
 
@@ -571,5 +566,18 @@ def create_a_rincon(current_user):
 
 
 
+@main.route('/get_user_rincons/', methods=['POST'])
+@token_required
+def get_user_rincons(current_user):
+    logger_main.info(f"- in get_user_rincons endpoint")
+
+    user_rincons = [[str(i.rincon.id), i.rincon.name, i.rincon.name_no_spaces] for i in current_user.rincons]
+
+    user_rincons_ios = []
+    for rincon_info in user_rincons:
+        user_rincons_ios.append(create_dict_rincon_ios(current_user.id, rincon_info[0]))
 
 
+    return jsonify(user_rincons_ios)
+
+    # return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})
