@@ -494,7 +494,14 @@ def rincon_membership(current_user):
         logger_main.info(f"-Removed user_id: {current_user.id} to Rincon_id {rincon_id}")
         status="removed user"
     else:
-        new_membership = UsersToRincons(users_table_id=current_user.id,rincons_table_id=rincon_id)
+        # new_membership = UsersToRincons(users_table_id=current_user.id,rincons_table_id=rincon_id)
+        new_membership = UsersToRincons(users_table_id = current_user.id,
+            rincons_table_id= rincon_id,
+            permission_like=True,
+            permission_comment=True,
+            permission_post=True,
+            permission_admin=True
+            )
         sess.add(new_membership)
         logger_main.info(f"-Added user_id: {current_user.id} to Rincon_id {rincon_id}")
         status="added user"

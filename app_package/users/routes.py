@@ -80,7 +80,7 @@ def login():
         dict_user_ios['user_rincons'] = user_rincons_ios
 
 
-        logger_users.info(f"--- dict_user_ios: {dict_user_ios}")
+        # logger_users.info(f"--- dict_user_ios: {dict_user_ios}")
         return jsonify(dict_user_ios)
 
     return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})

@@ -210,11 +210,11 @@ def addUserToRincon(user_id, rincon_id):
 
 
 def create_dict_rincon_ios(user_id, rincon_id):
-    logger_main.info(f"- create_dict_rincon_ios: user_id: {user_id}, rincon_id: {rincon_id}")
+    # logger_main.info(f"- create_dict_rincon_ios: user_id: {user_id}, rincon_id: {rincon_id}")
     rincon = sess.get(Rincons, rincon_id)
-    logger_main.info(f"- rincon: {rincon}")
+    # logger_main.info(f"- rincon: {rincon}")
     user_to_rincon = sess.get(UsersToRincons,(user_id,rincon_id))
-    logger_main.info(f"- user_to_rincon: {user_to_rincon}")
+    # logger_main.info(f"- user_to_rincon: {user_to_rincon}")
     
 
     dict_rincon_ios = {}

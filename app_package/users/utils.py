@@ -78,7 +78,7 @@ def send_confirm_email(email):
 def create_dict_user_ios(user_id):
     logger_main.info(f"- create_dict_user: user_id: {user_id}")
     user = sess.get(Users, user_id)
-    logger_main.info(f"- user: {user}")
+    # logger_main.info(f"- user: {user}")
     
     dict_user_ios = {}
     dict_user_ios['id']=str(user.id)
