@@ -8,7 +8,7 @@ from tr01_models import sess, Users, Rincons, RinconsPosts, UsersToRincons, \
     RinconsPostsComments, RinconsPostsLikes, RinconsPostsCommentsLikes
 from app_package.token_decorator import token_required
 from app_package.main.utils import create_rincon_posts_list, create_rincon_post_dict, \
-    create_empty_rincon_post_dict, create_dict_rincon_ios
+    create_empty_rincon_post_dict, create_dict_rincon_ios, addUserToRinconFullAccess
 import json
 import time
 import socket
@@ -39,6 +39,7 @@ def are_we_running():
         hostname = "not sure of my name"
     logger_main.info(f"are_we_working endpoint pinged")
 
+    # logger_main.info(f"TR_VERIFICATION_PASSWORD: {current_app.config.get('TR_VERIFICATION_PASSWORD')}")
 
     return jsonify(f"Yes! We're up! in the {hostname} machine")
 
@@ -119,12 +120,14 @@ def check_invite_json():
 
     try:
         request_json = request.json
-        logger_main.info("request_json:",request_json)
+        logger_main.info(f"request_json: {request_json}")
     except Exception as e:
         logger_main.info(e)
         return make_response('Could not verify', 400, {'message' : 'httpBody data recieved not json not parse-able.'})
 
     website_credentials = request_json.get("TR_VERIFICATION_PASSWORD")
+
+    logger_main.info(f"TR_VERIFICATION_PASSWORD: {current_app.config.get('TR_VERIFICATION_PASSWORD')}")
 
 
     if website_credentials != current_app.config.get("TR_VERIFICATION_PASSWORD"):
@@ -146,13 +149,16 @@ def check_invite_json():
             list_invite_user_to_delete = []
             for invited_email, rincon_ids_list in invite_dict.items():
                 invited_user = sess.query(Users).filter_by(email= invited_email).first()
+                
                 if invited_user:
                     list_invite_user_to_delete.append(invited_email)
                     for rincon_tuple in rincon_ids_list:
-                        if rincon_tuple[1] == sess.get(Rincons,rincon_tuple[0]).name_no_spaces:
-                            new_rincon_access = UsersToRincons(users_table_id= invited_user.id, rincons_table_id = rincon_tuple[0])
-                            sess.add(new_rincon_access)
-                            sess.commit()
+                        user_to_rincon_exists = sess.get(UsersToRincons,(invited_user.id,rincon_tuple[0]))
+                        name_for_verification = sess.get(Rincons,rincon_tuple[0]).name_no_spaces
+
+                        if rincon_tuple[1] == name_for_verification and not user_to_rincon_exists :
+                            logger_main.info("--- made it past: rincon_tuple[1] == name_for_verification and not user_to_rincon_exists ---")
+                            addUserToRinconFullAccess(invited_user.id, rincon_tuple[0])
                     
             # delete invite user from dict
             for email in list_invite_user_to_delete:
@@ -495,15 +501,16 @@ def rincon_membership(current_user):
         status="removed user"
     else:
         # new_membership = UsersToRincons(users_table_id=current_user.id,rincons_table_id=rincon_id)
-        new_membership = UsersToRincons(users_table_id = current_user.id,
-            rincons_table_id= rincon_id,
-            permission_like=True,
-            permission_comment=True,
-            permission_post=True,
-            permission_admin=True
-            )
-        sess.add(new_membership)
-        logger_main.info(f"-Added user_id: {current_user.id} to Rincon_id {rincon_id}")
+        # new_membership = UsersToRincons(users_table_id = current_user.id,
+        #     rincons_table_id= rincon_id,
+        #     permission_like=True,
+        #     permission_comment=True,
+        #     permission_post=True,
+        #     permission_admin=True
+        #     )
+        # sess.add(new_membership)
+        addUserToRinconFullAccess(current_user.id,rincon_id)
+        # logger_main.info(f"-Added user_id: {current_user.id} to Rincon_id {rincon_id}")
         status="added user"
     
     sess.commit()
@@ -564,8 +571,6 @@ def create_a_rincon(current_user):
     
     return jsonify(new_rincon_ios)
 
-
-
 @main.route('/get_user_rincons/', methods=['POST'])
 @token_required
 def get_user_rincons(current_user):
@@ -581,3 +586,100 @@ def get_user_rincons(current_user):
     return jsonify(user_rincons_ios)
 
     # return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})
+
+
+@main.route('/invite_user/', methods=['POST'])
+@token_required
+def invite_user(current_user):
+    logger_main.info(f"- in invite_user endpoint")
+
+    try:
+        request_json = request.json
+        rincon_id = int(request_json.get("id"))
+        logger_main.info(f"-Rincon_id {rincon_id}")
+        # post_id = int(request_json.get("post_id"))
+        # logger_main.info(f"-Rincon_id {post_id}")
+    except Exception as e:
+        logger_main.info(e)
+        return jsonify({"status": "httpBody data recieved not json not parse-able."})
+
+
+    dict_response = {}
+    dict_response["status"] = "unknown"
+    dict_response["new_member_user_id"] = "unknown"
+    dict_response["rincon_id"] = f"{rincon_id}"
+
+    # get email
+    invite_email = request_json.get("new_user_email")
+    logger_main.info(f"invite_email:  {invite_email}")
+    logger_main.info(f"request_json:  {request_json}")
+
+    if invite_email in [None,""]:
+        return jsonify({"status": "did not find email"})
+
+    invited_user = sess.query(Users).filter_by(email = invite_email).first()
+    logger_main.info(f"invited_user:  {invited_user}")
+    # try to add email to rincon
+    if invited_user:
+        
+
+        #check if invited user already member
+        if sess.query(UsersToRincons).filter_by(users_table_id=invited_user.id, rincons_table_id = rincon_id).first():
+            logger_main.info(f"{invite_email} already part of Rincon")
+            # flash(f"{invite_email} already part of Rincon", "warning")
+            return redirect(request.url)
+
+        # new_user_rincon_assoc = UsersToRincons(users_table_id=invited_user.id, rincons_table_id = rincon_id)
+        # sess.add(new_user_rincon_assoc)
+        # sess.commit()
+        addUserToRinconFullAccess(invited_user.id, rincon_id)
+        dict_response["status"] = "existing user"
+        dict_response["new_member_user_id"] = str(invited_user.id)
+
+    else:# Make/add to invitation_json_file_path_and_name
+
+        logger_main.info("user not found")
+
+
+        # search for invitations file
+        invitation_json_file_path_and_name = os.path.join(current_app.config.get("DB_ROOT"), "rincon_files","pending_rincon_invitations.json")
+        if os.path.exists(invitation_json_file_path_and_name):
+            invitation_json_file = open(invitation_json_file_path_and_name)
+            invite_dict = json.load(invitation_json_file)
+            invitation_json_file.close()
+
+            if invite_dict.get(invite_email):# dict entry for email already exits, append to it
+                list_of_invited_email_invites = invite_dict.get(invite_email)
+
+
+                if int(rincon_id) not in list_of_invited_email_invites:
+                    list_of_invited_email_invites.append([int(rincon_id),sess.get(Rincons, int(rincon_id)).name_no_spaces])
+                    invite_dict[invite_email] = list_of_invited_email_invites
+                    with open(invitation_json_file_path_and_name,'w') as invitation_json_file:
+                        json.dump(invite_dict, invitation_json_file)
+                else:
+                    logger_main.info(f"- {invite_email} invite already exists for {rincon_id}")
+
+            else:# NO dict entry for email, make a new one
+                invite_dict[invite_email] = [[int(rincon_id),sess.get(Rincons, int(rincon_id)).name_no_spaces]]
+                with open(invitation_json_file_path_and_name,'w') as invitation_json_file:
+                    json.dump(invite_dict, invitation_json_file)
+                
+
+
+        else:# No json file, make a json file and make dict entry for email
+            invite_dict = {}
+            invite_dict[invite_email] = [[int(rincon_id),sess.get(Rincons, int(rincon_id)).name_no_spaces]]
+
+            # print("*-- invitation dictioanry: ")
+            # print(invite_dict)
+
+            with open(invitation_json_file_path_and_name, "w") as invite_file:
+                json.dump(invite_dict,invite_file)
+        
+        dict_response["status"] = "added email to invite.json file"
+
+    logger_main.info(f"dict_response: {dict_response}")
+    return jsonify(dict_response)
+
+

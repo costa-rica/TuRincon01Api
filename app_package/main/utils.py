@@ -207,6 +207,18 @@ def addUserToRincon(user_id, rincon_id):
     sess.commit()
     logger_main.info(f"- User {user_id} successfully added to rincon_id: {rincon_id} -")
 
+def addUserToRinconFullAccess(user_id, rincon_id):
+
+    new_member = UsersToRincons(users_table_id = user_id,
+        rincons_table_id= rincon_id,
+        permission_like=True,
+        permission_comment=True,
+        permission_post=True,
+        permission_admin=False
+        )
+    sess.add(new_member)
+    sess.commit()
+    logger_main.info(f"- User {user_id} successfully added to rincon_id: {rincon_id} -")
 
 
 def create_dict_rincon_ios(user_id, rincon_id):

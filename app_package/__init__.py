@@ -39,6 +39,8 @@ logging.getLogger('werkzeug').setLevel(logging.DEBUG)
 logging.getLogger('werkzeug').addHandler(file_handler)
 
 logger_init.info(f'--- Starting Tu Rincón API ---')
+# logger_init.info(f'--- CONFIG_FILE_NAME: {os.environ.get("CONFIG_FILE_NAME")}---')
+# logger_init.info(f'--- DB_ROOT: {os.environ.get("DB_ROOT")}---')
 
 mail = Mail()
 
