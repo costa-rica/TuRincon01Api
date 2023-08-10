@@ -12,6 +12,7 @@ from app_package.main.utils import create_rincon_posts_list, create_rincon_post_
 import json
 import time
 import socket
+import shutil
 
 main = Blueprint('main', __name__)
 
@@ -181,7 +182,6 @@ def check_invite_json():
 
 
 @main.route("/rincon_post_file_testing/<file_name>", methods=["POST"])
-# @token_required
 def rincon_file_testing( file_name):
     print("*** calling for images (rincon_file_testing) ***")
 
@@ -215,7 +215,6 @@ def rincon_file_testing( file_name):
         rincon_files_db_folder_name), image_filename)
 
 
-
 @main.route('/like_post/<rincon_id>/<post_id>/', methods=['POST'])
 @token_required
 def like_post(current_user, rincon_id, post_id):
@@ -244,7 +243,6 @@ def like_post(current_user, rincon_id, post_id):
     response_dict["like_count"]= len(post.post_like) if post.post_like != [] else 0  
 
     return jsonify(response_dict)
-
 
 
 @main.route('/new_comment/<rincon_id>/<post_id>/', methods=['POST'])
@@ -351,13 +349,10 @@ def receive_rincon_post(current_user):
     return jsonify({"post_received_status":"success","new_post_id":str(post_id)})
 
 
-
 @main.route('/receive_image', methods=['POST'])
 @token_required
 def receive_image(current_user):
-    # logger_main.info("------------------------------------------------")
     logger_main.info(f"- in receive_image endpoint")
-    # logger_main.info("------------------------------------------------")
 
     try:
         requestFiles = request.files
@@ -415,13 +410,10 @@ def receive_image(current_user):
     return jsonify({"image_received_status":"Successfully send images and executed /receive_image endpoint "})
 
 
-
 @main.route('/delete_post/<post_id>', methods=['POST'])
 @token_required
 def delete_post(current_user, post_id):
-    # logger_main.info("------------------------------------------------")
     logger_main.info(f"- in delete_post endpoint")
-    # logger_main.info("------------------------------------------------")
 
     rincon_post = sess.get(RinconsPosts, post_id)
 
@@ -446,10 +438,7 @@ def delete_post(current_user, post_id):
 @main.route('/search_rincons/', methods=['POST'])
 @token_required
 def search_rincons(current_user):
-    # logger_main.info("------------------------------------------------")
     logger_main.info(f"- in search_rincons endpoint")
-    # logger_main.info("------------------------------------------------")
-
 
     availible_rincons = sess.query(Rincons).filter_by(public=True).all()
     # user = sess.get(Users,current_user.id)
@@ -597,8 +586,6 @@ def invite_user(current_user):
         request_json = request.json
         rincon_id = int(request_json.get("id"))
         logger_main.info(f"-Rincon_id {rincon_id}")
-        # post_id = int(request_json.get("post_id"))
-        # logger_main.info(f"-Rincon_id {post_id}")
     except Exception as e:
         logger_main.info(e)
         return jsonify({"status": "httpBody data recieved not json not parse-able."})
@@ -680,6 +667,54 @@ def invite_user(current_user):
         dict_response["status"] = "added email to invite.json file"
 
     logger_main.info(f"dict_response: {dict_response}")
+    return jsonify(dict_response)
+
+
+
+@main.route('/delete_rincon/', methods=['POST'])
+@token_required
+def delete_rincon(current_user):
+    logger_main.info(f"- accessed delete_rincon endpoint")
+
+    try:
+        request_json = request.json
+        rincon_id = int(request_json.get("id"))
+        logger_main.info(f"-Rincon_id {rincon_id}")
+
+    except Exception as e:
+        logger_main.info(e)
+        return jsonify({"status": "httpBody data recieved not json not parse-able."})
+
+    rincon = sess.get(Rincons, rincon_id)
+    # remove static rincon_dir folder
+    static_dir_name = os.path.join(current_app.config.get('DB_ROOT'), "rincon_files", f"{rincon.id}_{rincon.name_no_spaces}")
+
+    if os.path.isdir(static_dir_name):
+        # logger_main.info(f"**** Found directory to delete: {static_dir_name}")
+        shutil.rmtree(static_dir_name)
+    # else:
+    #     logger_main.info(f"**** DID NOT Find directory to delete: {static_dir_name}")
+
+    # last thing: Delete rincon from rincons table
+    delete_rincon = sess.query(Rincons).filter_by(id=rincon_id).delete()
+    logger_main.info(f"Rincon deleted: {delete_rincon}")
+                
+    # delete Association Table link
+    delete_userToRincon = sess.query(UsersToRincons).filter_by(rincons_table_id=rincon_id ).delete()
+    logger_main.info(f"UsersToRincons deleted: {delete_userToRincon}")
+
+    sess.query(RinconsPosts).filter_by(rincon_id = rincon_id).delete()
+    sess.query(RinconsPostsLikes).filter_by(rincon_id = rincon_id).delete()
+    sess.query(RinconsPostsComments).filter_by(rincon_id = rincon_id).delete()
+    sess.query(RinconsPostsCommentsLikes).filter_by(rincon_id = rincon_id).delete()
+
+
+    sess.commit()
+
+    dict_response = {}
+    dict_response["status"] = "deleted rincon"
+    dict_response["rincon_id"] = f"{rincon_id}"
+
     return jsonify(dict_response)
 
 
