@@ -8,7 +8,8 @@ from tr01_models import sess, Users, Rincons, RinconsPosts, UsersToRincons, \
     RinconsPostsComments, RinconsPostsLikes, RinconsPostsCommentsLikes
 from app_package.token_decorator import token_required
 from app_package.main.utils import create_rincon_posts_list, create_rincon_post_dict, \
-    create_empty_rincon_post_dict, create_dict_rincon_ios, addUserToRinconFullAccess
+    create_empty_rincon_post_dict, create_dict_rincon_ios, addUserToRinconFullAccess, \
+    addUserToRinconAccessNotAdmin
 import json
 import time
 import socket
@@ -619,7 +620,7 @@ def invite_user(current_user):
         # new_user_rincon_assoc = UsersToRincons(users_table_id=invited_user.id, rincons_table_id = rincon_id)
         # sess.add(new_user_rincon_assoc)
         # sess.commit()
-        addUserToRinconFullAccess(invited_user.id, rincon_id)
+        addUserToRinconAccessNotAdmin(invited_user.id, rincon_id)
         dict_response["status"] = "existing user"
         dict_response["new_member_user_id"] = str(invited_user.id)
 
