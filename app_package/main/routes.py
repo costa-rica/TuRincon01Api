@@ -726,28 +726,17 @@ def delete_user(current_user):
     logger_main.info(f"- accessed delete_user endpoint")
     logger_main.info(f"- Deleteing user ID: {current_user.id}, email: {current_user.email}")
 
-    # try:
-    #     request_json = request.json
-    #     # rincon_id = int(request_json.get("id"))
-    #     logger_main.info(f"-request_json: {request_json}")
-
-    # except Exception as e:
-    #     logger_main.info(e)
-    #     return jsonify({"status": "httpBody data recieved not json not parse-able."})
-
     # delete user created rincons: No
 
     user_id_to_delete = current_user.id
-    # get list of user's posts:
-    user_posts = sess.query(RinconsPosts).filter_by(user_id= current_user.id).all()
-    list_user_posts_ids = [i.id for i in user_posts]
-    ## delete comments in post
-    ## delete likes in post
-    for post_id in list_user_posts_ids:
-        post_likes = sess.query(RinconsPostsLikes).filter_by(post_id=post_id).delete()
-        logger_main.info(f"post_likes deleted: {post_likes}")
-        ohter_users_comments = sess.query(RinconsPostsComments).filter_by(post_id=post_id).delete()
-        logger_main.info(f"other_users_comments deleted: {ohter_users_comments}")
+    
+    ## delete user likes in post
+    user_likes = sess.query(RinconsPostsLikes).filter_by(user_id=user_id_to_delete).delete()
+    logger_main.info(f"post_likes deleted: {user_likes}")
+
+    ## delete user comments in post
+    user_comments = sess.query(RinconsPostsComments).filter_by(user_id=user_id_to_delete).delete()
+    logger_main.info(f"other_users_comments deleted: {user_comments}")
     
     # delete user posts
     user_posts = sess.query(RinconsPosts).filter_by(user_id= current_user.id).delete()
