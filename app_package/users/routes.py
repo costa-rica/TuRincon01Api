@@ -14,7 +14,8 @@ from tr01_models import sess, engine, text, Base, \
 
 from app_package.users.utils import create_token, send_reset_email, send_confirm_email, \
     create_dict_user_ios
-from app_package.main.utils import addUserToRincon, create_dict_rincon_ios
+from app_package.main.utils import addUserToRincon, create_dict_rincon_ios, \
+    search_rincon_based_on_name_no_spaces
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from app_package.token_decorator import token_required
 
@@ -111,27 +112,41 @@ def register():
 
     hash_pw = bcrypt.hashpw(request_json.get('new_password').encode(), salt)
     new_user = Users(email = new_email, password = hash_pw)
+
+    # Add new user
     try:
         sess.add(new_user)
         sess.commit()
     except:
         return jsonify({"status": f"failed to add to database."})
-
-    
     logger_users.info(f"- new_user.id: {new_user.id} -")
 
+
+    list_user_rincons = []
+
+    # Add new user to Rincon: costa_rica
     try:
         addUserToRincon(new_user.id, 1)
+        costa_rica_rincon = sess.get(Rincons,1)
+        list_user_rincons.append(create_dict_rincon_ios(new_user.id, costa_rica_rincon.id))
     except:
-        logger_users.info(f"- Unable to add user {user_id} -")
+        logger_users.info(f"- Unable to add user {user_id} to costa_rica -")
 
-    costa_rica_rincon = sess.get(Rincons,1)
+    # Add new user to Rincon: Town_Hall_🏫
+    try:
+        rincon_th = search_rincon_based_on_name_no_spaces("Town_Hall_🏫")
+        addUserToRincon(new_user.id, rincon_th.id)
+        # costa_rica_rincon = sess.get(Rincons,rincon_th.id)
+        list_user_rincons.append(create_dict_rincon_ios(new_user.id, rincon_th.id))
+    except:
+        logger_users.info(f"- Unable to add user {user_id} to Town Hall -")
 
     new_user_dict_response = {}
     new_user_dict_response["id"]=str(new_user.id)
     new_user_dict_response["email"]=new_user.email
     new_user_dict_response["username"]=new_user.username
-    new_user_dict_response["user_rincons"]= [create_dict_rincon_ios(new_user.id, costa_rica_rincon.id)]
+    # new_user_dict_response["user_rincons"]= [create_dict_rincon_ios(new_user.id, costa_rica_rincon.id)]
+    new_user_dict_response["user_rincons"]= list_user_rincons
     
     # {"id":str(costa_rica_rincon.id),
     #     "name":costa_rica_rincon.name,
@@ -146,10 +161,8 @@ def register():
     logger_users.info('--- new_user ---')
     logger_users.info(new_user)
 
-    # return jsonify({'token': token,'user_id':str(new_user.id)})
     return jsonify(new_user_dict_response)
 
-    # return jsonify({"user_id":str(new_user.id)})
 
 
 
@@ -158,38 +171,4 @@ def register():
 #     logout_user()
 #     return jsonify({"status":f"User email: {new_email} successfully logged out"})
 
-
-# @users.route('/test_response', methods=['POST'])
-# def test_response():
-#     logger_users.info(f"-- in test_response route --")
-
-#     try:
-#         request_json = request.json
-#         print("request_json:",request_json)
-#     except Exception as e:
-#         logger_users.info(e)
-#         return jsonify({"status": "httpBody data recieved not json not parse-able."})
-
-#     if request_json.get("message") == "sudo_let_me_in":
-#         return jsonify({'response': "success!"})
-
-#     return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})
-
-
-# @users.route('/test_response_token', methods=['POST'])
-# @token_required
-# def test_response_token(current_user):
-#     logger_users.info(f"-- in test_response_token route --")
-
-#     try:
-#         request_json = request.json
-#         print("request_json:",request_json)
-#     except Exception as e:
-#         logger_users.info(e)
-#         return jsonify({"status": "httpBody data recieved not json not parse-able."})
-
-#     if request_json.get("message") == "sudo_let_me_in":
-#         return jsonify({'response': "success!"})
-
-#     return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})
 

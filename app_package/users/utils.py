@@ -59,7 +59,6 @@ def send_reset_email(user):
 
 If you did not make this request, ignore email and there will be no change
 '''
-
     mail.send(msg)
 
 

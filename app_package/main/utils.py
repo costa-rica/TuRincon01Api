@@ -264,49 +264,11 @@ def create_dict_rincon_ios(user_id, rincon_id):
     return dict_rincon_ios
 
 
-# def create_dict_rincon_ios(rincon_id, user_id):
-#     rincon = sess.get(Rincons, rincon_id)
-#     rincon_dict = {}
-#     rincon_dict["id"] = str(rincon.id)
-#     rincon_dict["name"] = rincon.name
-#     rincon_dict["name_no_spaces"] = rincon.name_no_spaces
-#     rincon_dict["public_status"] = rincon.public
+
+def search_rincon_based_on_name_no_spaces(name_no_spaces):
+    rincons = sess.query(Rincons).all()
+    for rincon in rincons:
+        if rincon.name_no_spaces == 'Town_Hall_🏫':
+            return(rincon)
     
-#     user_to_rincon = sess.query(UsersToRincons).filter_by(
-#             users_table_id = user_id, rincons_table_id=rincon.id).first()
-#     if user_to_rincon:
-#         rincon_dict["permission_view"] = user_to_rincon.permission_view
-#         rincon_dict["permission_like"] = user_to_rincon.permission_like
-#         rincon_dict["permission_comment"] = user_to_rincon.permission_comment
-#         rincon_dict["permission_post"] = user_to_rincon.permission_post
-#         rincon_dict["permission_admin"] = user_to_rincon.permission_admin
-    
-#     return rincon_dict
-
-# def create_search_rincon_list(user_id):
-#     rincon_list = sess.query(Rincons).filter_by(public=True).all()
-
-#     list_rincons_search = []
-#     for rincon in rincon_list:
-#         temp_dict = {}
-#         temp_dict["id"] = str(rincon.id)
-#         temp_dict["name"] = rincon.name
-#         temp_dict["name_no_spaces"] = rincon.name_no_spaces
-#         temp_dict["public_status"] = rincon.public
-
-#         user_to_rincon = sess.query(UsersToRincons).filter_by(
-#             users_table_id = user_id, rincons_table_id=rincon.id).first()
-#         if user_to_rincon:
-#             temp_dict["permission_view"] = user_to_rincon.permission_view
-#             temp_dict["permission_like"] = user_to_rincon.permission_like
-#             temp_dict["permission_comment"] = user_to_rincon.permission_comment
-#             temp_dict["permission_post"] = user_to_rincon.permission_post
-#             temp_dict["permission_admin"] = user_to_rincon.permission_admin
-        
-#         list_rincons_search.append(temp_dict)
-#     return list_rincons_search
-
-
-
-
-
+    return "not found"
