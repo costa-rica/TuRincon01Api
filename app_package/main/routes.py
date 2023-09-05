@@ -364,8 +364,6 @@ def receive_image(current_user):
         logger_main.info(f"requestFiles not found")
         return jsonify({"status": "Image Not found."})
 
-
-    
     for file_name, post_image in requestFiles.items():
         print("")
         # logger_main.info(requestFiles.getlist())
@@ -454,12 +452,6 @@ def search_rincons(current_user):
     list_rincons_to_send_ios = []
     for rincon in availible_rincons_sorted:
         list_rincons_to_send_ios.append(create_dict_rincon_ios(current_user.id, rincon.id))
-
-    # list_rincons = create_search_rincon_list(current_user.id)
-    # list_rincons_to_send_ios_sorted = sorted(list_rincons_to_send_ios, key=lambda rincon: rincon.id)
-    
-    # logger_main.info(list_rincons_to_send_ios)
-    # logger_main.info("------------------------------------------------")
     
     return jsonify(list_rincons_to_send_ios)
 
@@ -766,3 +758,57 @@ def delete_user(current_user):
 
     return jsonify(dict_response)
 
+
+@main.route('/receive_video', methods=['POST'])
+@token_required
+def receive_video(current_user):
+    logger_main.info(f"- in receive_video endpoint")
+
+    try:
+        requestFiles = request.files
+        logger_main.info(f"reqeustFiles: {requestFiles}")
+
+        # Check if a video file was included in the request
+        if 'video' not in request.files:
+            return jsonify({'error': 'No video file provided'}), 400
+
+        video_file = request.files['video']
+
+        # Check if the file is empty
+        if video_file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+
+
+
+        post_video_filename = video_file.filename
+        # logger_main.info(f"----> post_video_filename: {file_extension} <-- *******")
+        filename_no_extension, file_extension = os.path.splitext(post_video_filename)
+        logger_main.info(f"-- post_image_filename: {post_video_filename} --")
+
+        _, post_id, _, image_id = filename_no_extension.split('_')
+        logger_main.info(f"post_id: {post_id}, img_count: {image_id}")
+
+        post_obj = sess.query(RinconsPosts).filter_by(id = post_id).first()
+        # logger_main.info(f"post_obj")
+        # logger_main.info(f"post_obj.rincon_id: {post_obj.rincon_id}")
+        # logger_main.info(f"post_obj.posts_ref_rincons.name_no_spaces: {post_obj.posts_ref_rincons.name_no_spaces}")
+        this_rincon_dir_name= str(post_obj.rincon_id) + "_" + post_obj.posts_ref_rincons.name_no_spaces
+
+        path_to_rincon_files = os.path.join(current_app.config.get('DB_ROOT'), "rincon_files",this_rincon_dir_name)
+
+        # Get the filename sent with the request
+        video_name = request.headers.get('Content-Disposition').split('"')[1]
+
+        # Save the video file with the specified name
+        video_path = os.path.join(path_to_rincon_files, video_name)
+        video_file.save(video_path)
+
+
+    except Exception as e:
+        logger_main.info(e)
+        logger_main.info(f"requestFiles not found")
+        return jsonify({"status": "Image Not found."})
+
+    logger_main.info(f"- finished receive_video endpoint")
+
+    return jsonify({"video_received_status":"Successfully send images and executed /receive_video endpoint"})
