@@ -59,7 +59,7 @@ def rincons(current_user):
 @token_required
 def rincon(current_user, rincon_id):
 
-    print(f"- accessed rincon endpoint with rincon_id: {rincon_id}")
+    logger_main.info(f"- accessed rincon endpoint with rincon_id: {rincon_id}")
     
     rincon = sess.query(Rincons).filter_by(id= rincon_id).first()
 
@@ -78,9 +78,9 @@ def rincon(current_user, rincon_id):
     if len(posts_list) == 0:
         print("add a post")
         posts_list = create_empty_rincon_post_dict(current_user,rincon_id )
-    # print("----------")
-    # print(posts_list)
-    # print("-----------")
+    logger_main.info("----------")
+    logger_main.info(posts_list)
+    logger_main.info("-----------")
     return jsonify(posts_list)
 
 @main.route("/rincon_post_file/<file_name>", methods=["POST"])
@@ -271,7 +271,6 @@ def new_comment(current_user, rincon_id, post_id):
     posts_list = create_rincon_posts_list(current_user, rincon_id)
     return jsonify(posts_list)
 
-
 @main.route('/delete_comment/<rincon_id>/<post_id>/<comment_id>', methods=['POST'])
 @token_required
 def delete_comment(current_user, rincon_id, post_id, comment_id):
@@ -299,7 +298,6 @@ def delete_comment(current_user, rincon_id, post_id, comment_id):
 
     return jsonify(post_dict)
 
-
 @main.route('/send_last_post_id', methods=['POST'])
 @token_required
 def send_last_post_id(current_user):
@@ -308,7 +306,6 @@ def send_last_post_id(current_user):
     last_post = sess.query(RinconsPosts).order_by(RinconsPosts.id.desc()).first()
 
     return jsonify({"last_post_id":str(last_post.id)})
-
 
 @main.route('/claim_a_post_id/<rincon_id>', methods=['POST'])
 @token_required
@@ -348,7 +345,6 @@ def receive_rincon_post(current_user):
     sess.commit()
 
     return jsonify({"post_received_status":"success","new_post_id":str(post_id)})
-
 
 @main.route('/receive_image', methods=['POST'])
 @token_required
@@ -408,7 +404,6 @@ def receive_image(current_user):
 
     return jsonify({"image_received_status":"Successfully send images and executed /receive_image endpoint "})
 
-
 @main.route('/delete_post/<post_id>', methods=['POST'])
 @token_required
 def delete_post(current_user, post_id):
@@ -425,6 +420,14 @@ def delete_post(current_user, post_id):
             logger_main.info(f"post_image_path_and_name: {post_image_path_and_name}")
             if os.path.exists(post_image_path_and_name):
                 os.remove(post_image_path_and_name)
+        
+    if rincon_post.video_file_name != None:
+        post_image_path_and_name = os.path.join(current_app.config.get('DB_ROOT'), 
+                "rincon_files", f"{rincon_post.rincon_id}_{rincon_post.posts_ref_rincons.name_no_spaces}",
+                rincon_post.video_file_name)
+        if os.path.exists(post_image_path_and_name):
+            os.remove(post_image_path_and_name)
+
     sess.query(RinconsPosts).filter_by(id = post_id).delete()
     sess.query(RinconsPostsLikes).filter_by(post_id = post_id).delete()
     sess.query(RinconsPostsComments).filter_by(post_id = post_id).delete()
@@ -432,7 +435,6 @@ def delete_post(current_user, post_id):
     sess.commit()
 
     return jsonify({"deleted_post_id":post_id})
-
 
 @main.route('/search_rincons/', methods=['POST'])
 @token_required
@@ -454,7 +456,6 @@ def search_rincons(current_user):
         list_rincons_to_send_ios.append(create_dict_rincon_ios(current_user.id, rincon.id))
     
     return jsonify(list_rincons_to_send_ios)
-
 
 @main.route('/rincon_membership/', methods=['POST'])
 @token_required
@@ -569,7 +570,6 @@ def get_user_rincons(current_user):
 
     # return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})
 
-
 @main.route('/invite_user/', methods=['POST'])
 @token_required
 def invite_user(current_user):
@@ -662,8 +662,6 @@ def invite_user(current_user):
     logger_main.info(f"dict_response: {dict_response}")
     return jsonify(dict_response)
 
-
-
 @main.route('/delete_rincon/', methods=['POST'])
 @token_required
 def delete_rincon(current_user):
@@ -709,8 +707,6 @@ def delete_rincon(current_user):
     dict_response["rincon_id"] = f"{rincon_id}"
 
     return jsonify(dict_response)
-
-
 
 @main.route('/delete_user/', methods=['POST'])
 @token_required
@@ -758,7 +754,6 @@ def delete_user(current_user):
 
     return jsonify(dict_response)
 
-
 @main.route('/receive_video', methods=['POST'])
 @token_required
 def receive_video(current_user):
@@ -782,13 +777,16 @@ def receive_video(current_user):
 
         post_video_filename = video_file.filename
         # logger_main.info(f"----> post_video_filename: {file_extension} <-- *******")
-        filename_no_extension, file_extension = os.path.splitext(post_video_filename)
+        # filename_no_extension, file_extension = os.path.splitext(post_video_filename)
+        filename_no_extension, file_extension = post_video_filename.split('.')
         logger_main.info(f"-- post_image_filename: {post_video_filename} --")
 
-        _, post_id, _, image_id = filename_no_extension.split('_')
-        logger_main.info(f"post_id: {post_id}, img_count: {image_id}")
+        _, post_id, _ = filename_no_extension.split('_')
+        logger_main.info(f"post_id: {post_id} video")
 
         post_obj = sess.query(RinconsPosts).filter_by(id = post_id).first()
+        post_obj.video_file_name = post_video_filename
+        sess.commit()
         # logger_main.info(f"post_obj")
         # logger_main.info(f"post_obj.rincon_id: {post_obj.rincon_id}")
         # logger_main.info(f"post_obj.posts_ref_rincons.name_no_spaces: {post_obj.posts_ref_rincons.name_no_spaces}")
@@ -797,10 +795,10 @@ def receive_video(current_user):
         path_to_rincon_files = os.path.join(current_app.config.get('DB_ROOT'), "rincon_files",this_rincon_dir_name)
 
         # Get the filename sent with the request
-        video_name = request.headers.get('Content-Disposition').split('"')[1]
+        # video_name = request.headers.get('Content-Disposition').split('"')[1]
 
         # Save the video file with the specified name
-        video_path = os.path.join(path_to_rincon_files, video_name)
+        video_path = os.path.join(path_to_rincon_files, post_video_filename)
         video_file.save(video_path)
 
 
