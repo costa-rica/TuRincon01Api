@@ -54,7 +54,6 @@ def rincons(current_user):
     # return render_template('main/rincons.html',users_rincons_list=users_rincons_list )
     return jsonify({'rincons': users_rincons_list})
 
-
 @main.route("/rincon_posts/<rincon_id>", methods=["POST"])
 @token_required
 def rincon(current_user, rincon_id):
@@ -114,7 +113,6 @@ def rincon_file(current_user, file_name):
 
     return send_from_directory(os.path.join(current_app.config.get('DB_ROOT'),"rincon_files", \
         rincon_files_db_folder_name), image_filename)
-
 
 @main.route("/check_invite_json", methods=["POST"])
 def check_invite_json():
@@ -181,7 +179,6 @@ def check_invite_json():
         
         return jsonify({"status": "Success!"})
 
-
 @main.route("/rincon_post_file_testing/<file_name>", methods=["POST"])
 def rincon_file_testing( file_name):
     print("*** calling for images (rincon_file_testing) ***")
@@ -215,7 +212,6 @@ def rincon_file_testing( file_name):
     return send_from_directory(os.path.join(current_app.config.get('DB_ROOT'),"rincon_files", \
         rincon_files_db_folder_name), image_filename)
 
-
 @main.route('/like_post/<rincon_id>/<post_id>/', methods=['POST'])
 @token_required
 def like_post(current_user, rincon_id, post_id):
@@ -244,7 +240,6 @@ def like_post(current_user, rincon_id, post_id):
     response_dict["like_count"]= len(post.post_like) if post.post_like != [] else 0  
 
     return jsonify(response_dict)
-
 
 @main.route('/new_comment/<rincon_id>/<post_id>/', methods=['POST'])
 @token_required
@@ -810,3 +805,39 @@ def receive_video(current_user):
     logger_main.info(f"- finished receive_video endpoint")
 
     return jsonify({"video_received_status":"Successfully send images and executed /receive_video endpoint"})
+
+
+@main.route('/rincon_public_status/', methods=['POST'])
+@token_required
+def rincon_public_status(current_user):
+    logger_main.info(f"- accessed rincon_public_status endpoint")
+
+    try:
+        request_json = request.json
+        rincon_id = int(request_json.get("id"))
+        logger_main.info(f"-Rincon_id {rincon_id}")
+
+    except Exception as e:
+        logger_main.info(e)
+        return jsonify({"status": "httpBody data recieved not json not parse-able."})   
+    
+    rincon = sess.query(Rincons).filter_by(id=rincon_id).first()
+    logger_main.info(f"Rincon Initial Public Status: {rincon.public}")
+
+    if rincon.public == True:
+        rincon.public = False
+    else:
+        rincon.public = True
+
+    sess.commit()
+
+    dict_response = {}
+    dict_response["public_status"] = f"{rincon.public}"
+    dict_response["rincon_id"] = f"{rincon_id}"
+
+    logger_main.info(f"Rincon New Public Status: {rincon.public}")
+
+    return jsonify(dict_response)
+
+
+

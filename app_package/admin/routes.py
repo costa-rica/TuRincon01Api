@@ -157,54 +157,54 @@ def move_tr_backup01():
 #############################
 # Delete not used: 20230524 #
 ##############################
-@admin.route("/process_tr_backup01", methods=["POST"])
-def process_tr_backup01():
-    logger_admin.info(f"- in process_tr_backup01")
+# @admin.route("/process_tr_backup01", methods=["POST"])
+# def process_tr_backup01():
+#     logger_admin.info(f"- in process_tr_backup01")
 
-    try:
-        request_json = request.json
-        logger_admin.info("request_json:",request_json)
-    except Exception as e:
-        logger_admin.info(e)
-        return make_response('Could not verify', 400, {'message' : 'httpBody data recieved not json not parse-able.'})
+#     try:
+#         request_json = request.json
+#         logger_admin.info("request_json:",request_json)
+#     except Exception as e:
+#         logger_admin.info(e)
+#         return make_response('Could not verify', 400, {'message' : 'httpBody data recieved not json not parse-able.'})
 
-    website_credentials = request_json.get("TR_VERIFICATION_PASSWORD")
+#     website_credentials = request_json.get("TR_VERIFICATION_PASSWORD")
 
 
-    if website_credentials != current_app.config.get("TR_VERIFICATION_PASSWORD"):
-        logger_admin.info("missing/incorrect website_credentials")
-        return make_response('Could not verify', 400, {'message' : 'missing/incorrect website_credentials'})
-    else:
-        logger_admin.info(f"- in process_tr_backup01: client verified, starting backup")
-        metadata = Base.metadata
-        db_table_list = [table for table in metadata.tables.keys()]
+#     if website_credentials != current_app.config.get("TR_VERIFICATION_PASSWORD"):
+#         logger_admin.info("missing/incorrect website_credentials")
+#         return make_response('Could not verify', 400, {'message' : 'missing/incorrect website_credentials'})
+#     else:
+#         logger_admin.info(f"- in process_tr_backup01: client verified, starting backup")
+#         metadata = Base.metadata
+#         db_table_list = [table for table in metadata.tables.keys()]
 
     
-    if not os.path.exists(os.path.join(current_app.config.get('DB_ROOT'),'db_backup.zip')):
-        print("* NO backup.zip *")
-        return make_response('Could not verify', 500, {'message' : 'NO backup zip file found'})
-        # return jsonify({"status": f"NO zip file found: {new_backup_path}"})
-    else:
-        print("- backup file is: ")
-        print(os.path.join(current_app.config.get('DB_ROOT'),'db_backup.zip'))
+#     if not os.path.exists(os.path.join(current_app.config.get('DB_ROOT'),'db_backup.zip')):
+#         print("* NO backup.zip *")
+#         return make_response('Could not verify', 500, {'message' : 'NO backup zip file found'})
+#         # return jsonify({"status": f"NO zip file found: {new_backup_path}"})
+#     else:
+#         print("- backup file is: ")
+#         print(os.path.join(current_app.config.get('DB_ROOT'),'db_backup.zip'))
 
-    # Client verified continue with process
-    backup_dir_path = os.path.join(current_app.config.get('BACKUP_ROOT'))
+#     # Client verified continue with process
+#     backup_dir_path = os.path.join(current_app.config.get('BACKUP_ROOT'))
 
-    # create folder to save
-    if not os.path.exists(os.path.join(current_app.config.get('BACKUP_ROOT'))):
-        os.makedirs(os.path.join(current_app.config.get('BACKUP_ROOT')))
+#     # create folder to save
+#     if not os.path.exists(os.path.join(current_app.config.get('BACKUP_ROOT'))):
+#         os.makedirs(os.path.join(current_app.config.get('BACKUP_ROOT')))
     
-    #create tr_backup_[date]
-    new_backup_zip_name = "TrBackup" + datetime.now().strftime("%Y%m%d") + ".zip"
+#     #create tr_backup_[date]
+#     new_backup_zip_name = "TrBackup" + datetime.now().strftime("%Y%m%d") + ".zip"
 
-    new_backup_path = os.path.join(current_app.config.get('BACKUP_ROOT'), new_backup_zip_name)
+#     new_backup_path = os.path.join(current_app.config.get('BACKUP_ROOT'), new_backup_zip_name)
 
-    if os.path.exists(os.path.join(current_app.config.get('DB_ROOT'),'db_backup.zip')):
-        print("* db back up exists *")
+#     if os.path.exists(os.path.join(current_app.config.get('DB_ROOT'),'db_backup.zip')):
+#         print("* db back up exists *")
 
-    shutil.move(os.path.join(current_app.config.get('DB_ROOT'),'db_backup.zip'), new_backup_path)
+#     shutil.move(os.path.join(current_app.config.get('DB_ROOT'),'db_backup.zip'), new_backup_path)
 
-    return jsonify({"status": f"zip file moved to storage dir: {new_backup_path}"})
+#     return jsonify({"status": f"zip file moved to storage dir: {new_backup_path}"})
 
 
