@@ -487,7 +487,8 @@ def rincon_membership(current_user):
         #     permission_admin=True
         #     )
         # sess.add(new_membership)
-        addUserToRinconFullAccess(current_user.id,rincon_id)
+        # addUserToRinconFullAccess(current_user.id,rincon_id)
+        addUserToRinconAccessNotAdmin(current_user.id,rincon_id)
         # logger_main.info(f"-Added user_id: {current_user.id} to Rincon_id {rincon_id}")
         status="added user"
     
