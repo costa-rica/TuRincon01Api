@@ -38,12 +38,9 @@ stream_handler.setFormatter(formatter_terminal)
 logger_users.addHandler(file_handler)
 logger_users.addHandler(stream_handler)
 
-
 salt = bcrypt.gensalt()
 
-
 users = Blueprint('users', __name__)
-
 
 @users.route('/login', methods = ['GET'])
 def login():
@@ -87,7 +84,6 @@ def login():
     return make_response('Could not verify', 401, {'message' : 'email/password are not valid'})
 
 
-
 @users.route('/register', methods = ['POST'])
 def register():
     logger_users.info(f"-- in register route --")
@@ -121,7 +117,8 @@ def register():
         return jsonify({"status": f"failed to add to database."})
     logger_users.info(f"- new_user.id: {new_user.id} -")
 
-
+    # send new user confirmation email they registered
+    send_confirm_email(new_user.email)
     list_user_rincons = []
 
     # Add new user to Rincon: costa_rica
