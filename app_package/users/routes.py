@@ -132,7 +132,7 @@ def register():
     # Add new user to Rincon: Town_Hall_🏫
     try:
         rincon_th = search_rincon_based_on_name_no_spaces("Town_Hall_🏫")
-        addUserToRincon(new_user.id, rincon_th.id)
+        addUserToRinconAccessNotAdmin(new_user.id, rincon_th.id)
         # costa_rica_rincon = sess.get(Rincons,rincon_th.id)
         list_user_rincons.append(create_dict_rincon_ios(new_user.id, rincon_th.id))
     except:
