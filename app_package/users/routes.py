@@ -15,7 +15,7 @@ from tr01_models import sess, engine, text, Base, \
 from app_package.users.utils import create_token, send_reset_email, send_confirm_email, \
     create_dict_user_ios
 from app_package.main.utils import addUserToRincon, create_dict_rincon_ios, \
-    search_rincon_based_on_name_no_spaces
+    search_rincon_based_on_name_no_spaces, addUserToRinconAccessNotAdmin
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 from app_package.token_decorator import token_required
 
